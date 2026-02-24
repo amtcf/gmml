@@ -1,0 +1,5 @@
+"""
+Entry-point module
+"""
+
+pass
