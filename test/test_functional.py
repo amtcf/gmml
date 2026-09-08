@@ -1620,6 +1620,7 @@ class TestGetIsoLogJointProb(TestCase):
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
+                [0.0, 0.0],
             ]
         )
         self.full_fct_0 = tensor(
@@ -1632,13 +1633,17 @@ class TestGetIsoLogJointProb(TestCase):
                     [1.0, 0.0],
                     [0.0, 1.0],
                 ],
+                [
+                    [1.0, 0.0],
+                    [0.0, 1.0],
+                ],
             ]
         )
         self.iso_fct_0 = tensor(
-            [1.0, 1.0]
+            [1.0, 1.0, 1.0]
         )
         self.norm_logit_0 = tensor(
-            [0.0, 0.0]
+            [0.0, 0.0, 0.0]
         )
         self.norm_logit_0 = log_softmax(self.norm_logit_0)
 
