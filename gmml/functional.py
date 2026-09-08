@@ -597,7 +597,7 @@ def get_iso_log_joint_prob(
     log_det = dim * iso_fct.log()
 
     diff = _get_vb_pairwise_diff(inpt, mean)
-    dist = ((iso_fct * diff) ** 2).sum(-1)
+    dist = ((iso_fct.unsqueeze(-1) * diff) ** 2).sum(-1)
 
     return norm_logit + log_det - dist / 2 - dim * log(2 * pi) / 2
 
