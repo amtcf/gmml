@@ -4,11 +4,13 @@ Validation helpers and custom errors.
 
 from typing import Literal, Optional
 
-from torch import Tensor, tensor, broadcast_shapes
+
+import torch
+
+from torch import Tensor
 from torch.testing import assert_close
 
 
-Reduction = Literal["mean", "sum"] | None
 Shape = list[int] | tuple[int, ...]
 
 
@@ -79,27 +81,10 @@ def are_broadcastable(*shapes: Shape) -> bool:
     """
 
     try:
-        broadcast_shapes(*shapes)
+        torch.broadcast_shapes(*shapes)
         return True
     except RuntimeError:
         return False
-
-
-def validate_reduction(reduction: Reduction) -> None:
-    """
-    Validates a loss reduction parameter.
-
-    Args:
-        reduction: Reduction mode to validate.
-
-    Returns:
-        None: This function returns only after successful validation.
-    """
-
-    if reduction is not None and reduction not in {"mean", "sum"}:
-        raise ValueError(
-            'Argument (reduction) can only be "mean", "sum" or None'
-        )
 
 
 def validate_non_empty(x: Tensor) -> None:
@@ -193,187 +178,192 @@ def validate_vector_batches(x: Tensor, y: Tensor) -> None:
         )
 
 
-def validate_square_matrix_batch(sq_mtrx: Tensor) -> None:
+def validate_square_matrix_batch(sq_mtrxs: Tensor) -> None:
     """
     Validates a square matrix.
 
     Args:
-        sq_mtrx: Tensor expected to represent a batch of square matrices.
+        sq_mtrxs: Tensor expected to represent a batch of square matrices.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_non_empty(sq_mtrx)
+    validate_non_empty(sq_mtrxs)
 
-    if sq_mtrx.dim() < 3:
+    if sq_mtrxs.dim() < 3:
         raise IsNotMatrixBatch(
-            "Argument tensor (sq_mtrx) is not a batch of matrices"
+            "Argument tensor (sq_mtrxs) is not a batch of matrices"
         )
 
-    *_, sq_mtrx_slast_dim, sq_mtrx_last_dim = list(sq_mtrx.shape)
+    *_, sq_mtrxs_slast_dim, sq_mtrxs_last_dim = list(sq_mtrxs.shape)
 
-    if sq_mtrx_last_dim < 2 or sq_mtrx_slast_dim < 2:
+    if sq_mtrxs_last_dim < 2 or sq_mtrxs_slast_dim < 2:
         raise IsNotMatrixBatch(
-            "Argument tensor (sq_mtrx) is not a batch of matrices"
+            "Argument tensor (sq_mtrxs) is not a batch of matrices"
         )
 
-    if sq_mtrx_slast_dim != sq_mtrx_last_dim:
+    if sq_mtrxs_slast_dim != sq_mtrxs_last_dim:
         raise IsNotSquareMatrixBatch(
-            "Argument tensor (sq_mtrx) is not a batch of square matrices"
+            "Argument tensor (sq_mtrxs) is not a batch of square matrices"
         )
 
 
 def validate_square_matrix_batches(
-    sq_mtrx_0: Tensor,
-    sq_mtrx_1: Tensor
+    sq_mtrxs_0: Tensor,
+    sq_mtrxs_1: Tensor
 ) -> None:
     """
     Validates a pair of square matrices.
 
     Args:
-        sq_mtrx_0: First tensor expected to represent a batch of square
+        sq_mtrxs_0: First tensor expected to represent a batch of square
             matrices.
-        sq_mtrx_1: Second tensor expected to represent a batch of square
+        sq_mtrxs_1: Second tensor expected to represent a batch of square
             matrices.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_square_matrix_batch(sq_mtrx_0)
-    validate_square_matrix_batch(sq_mtrx_1)
+    validate_square_matrix_batch(sq_mtrxs_0)
+    validate_square_matrix_batch(sq_mtrxs_1)
 
-    *_, _, sq_mtrx_0_last_dim = list(sq_mtrx_0.shape)
-    *_, _, sq_mtrx_1_last_dim = list(sq_mtrx_1.shape)
+    *_, _, sq_mtrxs_0_last_dim = list(sq_mtrxs_0.shape)
+    *_, _, sq_mtrxs_1_last_dim = list(sq_mtrxs_1.shape)
 
-    if sq_mtrx_0_last_dim != sq_mtrx_1_last_dim:
+    if sq_mtrxs_0_last_dim != sq_mtrxs_1_last_dim:
         raise HaveIncompatibleDims(
-            "Trailing dims of first tensor (sq_mtrx_0) and last tensor "
-            "(sq_mtrx_1) are incompatible"
+            "Trailing dims of first tensor (sq_mtrxs_0) and last tensor "
+            "(sq_mtrxs_1) are incompatible"
         )
 
 
-def validate_triu(triu: Tensor) -> None:
+def validate_trius(trius: Tensor) -> None:
     """
-    Validates an upper triangular tensor.
+    Validates a batch of upper triangular tensors.
 
     Args:
-        triu: Tensor expected to be upper triangular over its trailing
+        trius: Tensor expected to be upper triangular over its trailing
             dimensions.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    if triu.tril(diagonal=-1).any():
+    if trius.tril(diagonal=-1).any():
         raise IsNotUpperTriangular(
-            "Argument tensor (triu) is not upper triangular"
+            "Argument tensor (trius) is not upper triangular"
         )
 
 
-def validate_full_fct(full_fct: Tensor) -> None:
+def validate_full_factors(full_factors: Tensor) -> None:
     """
     Validates a batch of general Cholesky factors.
 
     Args:
-        full_fct: Tensor expected to contain upper-triangular Cholesky
+        full_factors: Tensor expected to contain upper-triangular Cholesky
             factors with positive diagonal entries.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_square_matrix_batch(full_fct)
-    validate_triu(full_fct)
+    validate_square_matrix_batch(full_factors)
+    validate_trius(full_factors)
 
-    if (full_fct.diagonal(dim1=-2, dim2=-1) <= 0).any():
+    if (full_factors.diagonal(dim1=-2, dim2=-1) <= 0).any():
         raise HasNonPositiveDiagonalElement(
-            "Argument tensor (full_fct) has a non-positive diagonal element"
+            "Argument tensor (full_factors) has a " \
+            "non-positive diagonal element"
         )
 
 
-def validate_norm_logit(norm_logit: Tensor) -> None:
+def validate_norm_logits(norm_logits: Tensor) -> None:
     """
     Validates a batch of normalized logit values.
 
     Args:
-        norm_logit: Tensor expected to encode normalized log-probabilities.
+        norm_logits: Tensor expected to encode normalized log-probabilities.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_scalar_batch(norm_logit)
+    validate_scalar_batch(norm_logits)
 
     try:
         assert_close(
-            norm_logit.exp().sum(),
-            tensor(1.0),
+            norm_logits.exp().sum(),
+            torch.tensor(1.0),
             check_dtype=False,
             check_device=False
         )
-    except:
+    except AssertionError:
         raise IsNotNormalized(
-            "Argument tensor (norm_logit) is not normalized"
+            "Argument tensor (norm_logits) is not normalized"
         )
 
 
 def validate_full_gaussian_parametrization(
-    mean: Tensor,
-    full_fct: Tensor,
-    norm_logit: Optional[Tensor] = None
+    means: Tensor,
+    full_factors: Tensor,
+    norm_logits: Optional[Tensor] = None
 ) -> None:
     """
     Validates a general Gaussian parametrization.
 
     Args:
-        mean: Tensor containing Gaussian mean vectors.
-        full_fct: Tensor containing upper-triangular Cholesky factors.
-        norm_logit: Optional tensor containing normalized component logits.
+        means: Tensor containing Gaussian mean vectors.
+        full_factors: Tensor containing upper-triangular Cholesky factors.
+        norm_logits: Optional tensor containing normalized component logits.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_vector_batch(mean)
-    validate_full_fct(full_fct)
+    validate_vector_batch(means)
+    validate_full_factors(full_factors)
 
-    *mean_batch_shape, mean_last_dim = list(mean.shape)
-    *full_fct_batch_shape, _, full_fct_last_dim = list(full_fct.shape)
+    *means_batch_shape, means_last_dim = list(means.shape)
+    *full_factors_batch_shape, _, full_factors_last_dim = list(
+        full_factors.shape
+    )
 
-    if mean_last_dim != full_fct_last_dim:
+    if means_last_dim != full_factors_last_dim:
         raise HaveIncompatibleDims(
-            "Trailing dims of first tensor (mean) and second tensor "
-            "(full_fct) are incompatible"
+            "Trailing dims of first tensor (means) and second tensor "
+            "(full_factors) are incompatible"
         )
 
-    if not are_broadcastable(mean_batch_shape, full_fct_batch_shape):
+    if not are_broadcastable(means_batch_shape, full_factors_batch_shape):
         raise HaveNonBroadcastableShapes(
-            "Batch dims of first tensor (mean) and second tensor "
-            "(full_fct) are not broadcastable"
+            "Batch dims of first tensor (means) and second tensor "
+            "(full_factors) are not broadcastable"
         )
 
-    if norm_logit is not None:
-        validate_norm_logit(norm_logit)
+    if norm_logits is not None:
+        validate_norm_logits(norm_logits)
 
-        norm_logit_batch_shape = list(norm_logit.shape)
-        batch_shape = broadcast_shapes(mean_batch_shape, full_fct_batch_shape)
+        norm_logits_batch_shape = list(norm_logits.shape)
+        batch_shape = torch.broadcast_shapes(
+            means_batch_shape, full_factors_batch_shape
+        )
         batch_shape = list(batch_shape)
 
-        if batch_shape != norm_logit_batch_shape:
+        if batch_shape != norm_logits_batch_shape:
             raise HaveNonMatchingShapes(
-                "Broadcasting shape of first (mean) and second tensor "
-                "(full_fct) does not match the shape of third tensor "
-                "(norm_logit)"
+                "Broadcasting shape of first (means) and second tensor "
+                "(full_factors) does not match the shape of third tensor "
+                "(norm_logits)"
             )
 
 
 def validate_full_gaussian_specification(
     inpt: Tensor,
-    mean: Tensor,
-    full_fct: Tensor,
-    norm_logit: Optional[Tensor] = None
+    means: Tensor,
+    full_factors: Tensor,
+    norm_logits: Optional[Tensor] = None
 ) -> None:
     """
     Validates a general Gaussian parametrization and its relation with the
@@ -381,126 +371,130 @@ def validate_full_gaussian_specification(
 
     Args:
         inpt: Input tensor expected to be compatible with the Gaussian means.
-        mean: Tensor containing Gaussian mean vectors.
-        full_fct: Tensor containing upper-triangular Cholesky factors.
-        norm_logit: Optional tensor containing normalized component logits.
+        means: Tensor containing Gaussian mean vectors.
+        full_factors: Tensor containing upper-triangular Cholesky factors.
+        norm_logits: Optional tensor containing normalized component logits.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_vector_batches(inpt, mean)
-    validate_full_gaussian_parametrization(mean, full_fct, norm_logit)
+    validate_vector_batches(inpt, means)
+    validate_full_gaussian_parametrization(means, full_factors, norm_logits)
 
 
 def validate_full_gaussian_parametrizations(
-    mean_0: Tensor,
-    full_fct_0: Tensor,
-    mean_1: Tensor,
-    full_fct_1: Tensor,
+    means_0: Tensor,
+    full_factors_0: Tensor,
+    means_1: Tensor,
+    full_factors_1: Tensor,
 ) -> None:
     """
     Validates a pair of general Gaussian parametrizations.
 
     Args:
-        mean_0: Mean vectors for the first Gaussian parametrization.
-        full_fct_0: Cholesky factors for the first Gaussian parametrization.
-        mean_1: Mean vectors for the second Gaussian parametrization.
-        full_fct_1: Cholesky factors for the second Gaussian parametrization.
+        means_0: Mean vectors for the first Gaussian parametrization.
+        full_factors_0: Cholesky factors for the first Gaussian
+            parametrization.
+        means_1: Mean vectors for the second Gaussian parametrization.
+        full_factors_1: Cholesky factors for the second Gaussian
+            parametrization.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_full_gaussian_parametrization(mean_0, full_fct_0)
-    validate_full_gaussian_parametrization(mean_1, full_fct_1)
+    validate_full_gaussian_parametrization(means_0, full_factors_0)
+    validate_full_gaussian_parametrization(means_1, full_factors_1)
 
-    *_, mean_0_last_dim = list(mean_0.shape)
-    *_, mean_1_last_dim = list(mean_1.shape)
+    *_, means_0_last_dim = list(means_0.shape)
+    *_, means_1_last_dim = list(means_1.shape)
 
-    if mean_0_last_dim != mean_1_last_dim:
+    if means_0_last_dim != means_1_last_dim:
         raise HaveIncompatibleDims(
-            "Last dim of first tensor (mean_0) and third tensor (mean_1) are "
-            "not compatible"
+            "Last dim of first tensor (means_0) and third tensor "
+            "(means_1) are not compatible"
         )
 
 
-def validate_diag_fct(diag_fct: Tensor) -> None:
+def validate_diag_factors(diag_factors: Tensor) -> None:
     """
     Validates a diagonally-restricted batch of Cholesky factors.
 
     Args:
-        diag_fct: Tensor expected to contain positive diagonal Cholesky
+        diag_factors: Tensor expected to contain positive diagonal Cholesky
             factors.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_vector_batch(diag_fct)
+    validate_vector_batch(diag_factors)
 
-    if (diag_fct <= 0).any():
+    if (diag_factors <= 0).any():
         raise HasNonPositiveElement(
-            "Argument tensor (diag_fct) has a non-positive element"
+            "Argument tensor (diag_factors) has a non-positive element"
         )
 
 
 def validate_diag_gaussian_parametrization(
-    mean: Tensor,
-    diag_fct: Tensor,
-    norm_logit: Optional[Tensor] = None
+    means: Tensor,
+    diag_factors: Tensor,
+    norm_logits: Optional[Tensor] = None
 ) -> None:
     """
     Validates a diagonally-constrained Gaussian parametrization.
 
     Args:
-        mean: Tensor containing Gaussian mean vectors.
-        diag_fct: Tensor containing diagonal Cholesky factors.
-        norm_logit: Optional tensor containing normalized component logits.
+        means: Tensor containing Gaussian mean vectors.
+        diag_factors: Tensor containing diagonal Cholesky factors.
+        norm_logits: Optional tensor containing normalized component logits.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_vector_batch(mean)
-    validate_diag_fct(diag_fct)
+    validate_vector_batch(means)
+    validate_diag_factors(diag_factors)
 
-    *mean_batch_shape, mean_last_dim = list(mean.shape)
-    *diag_fct_batch_shape, diag_fct_last_dim = list(diag_fct.shape)
+    *means_batch_shape, means_last_dim = list(means.shape)
+    *diag_factors_batch_shape, diag_factors_last_dim = list(diag_factors.shape)
 
-    if mean_last_dim != diag_fct_last_dim:
+    if means_last_dim != diag_factors_last_dim:
         raise HaveIncompatibleDims(
-            "Last dim of first tensor (mean) and second tensor (diag_fct) "
-            "are not compatible"
+            "Last dim of first tensor (means) and second tensor "
+            "(diag_factors) are not compatible"
         )
 
-    if not are_broadcastable(mean_batch_shape, diag_fct_batch_shape):
+    if not are_broadcastable(means_batch_shape, diag_factors_batch_shape):
         raise HaveNonBroadcastableShapes(
-            "Batch dims of first tensor (mean) and second tensor "
-            "(diag_fct) are not broadcastable"
+            "Batch dims of first tensor (means) and second tensor "
+            "(diag_factors) are not broadcastable"
         )
 
-    if norm_logit is not None:
-        validate_norm_logit(norm_logit)
+    if norm_logits is not None:
+        validate_norm_logits(norm_logits)
 
-        norm_logit_batch_shape = list(norm_logit.shape)
+        norm_logits_batch_shape = list(norm_logits.shape)
 
-        batch_shape = broadcast_shapes(mean_batch_shape, diag_fct_batch_shape)
+        batch_shape = torch.broadcast_shapes(
+            means_batch_shape, diag_factors_batch_shape
+        )
         batch_shape = list(batch_shape)
 
-        if batch_shape != norm_logit_batch_shape:
+        if batch_shape != norm_logits_batch_shape:
             raise HaveNonMatchingShapes(
-                "Broadcasting shape of first (mean) and second tensor "
-                "(diag_fct) does not match the shape of third tensor "
-                "(norm_logit)"
+                "Broadcasting shape of first (means) and second tensor "
+                "(diag_factors) does not match the shape of third tensor "
+                "(norm_logits)"
             )
 
 
 def validate_diag_gaussian_specification(
     inpt: Tensor,
-    mean: Tensor,
-    diag_fct: Tensor,
-    norm_logit: Optional[Tensor] = None
+    means: Tensor,
+    diag_factors: Tensor,
+    norm_logits: Optional[Tensor] = None
 ) -> None:
     """
     Validates a diagonally-constrained Gaussian parametrization and its
@@ -508,119 +502,124 @@ def validate_diag_gaussian_specification(
 
     Args:
         inpt: Input tensor expected to be compatible with the Gaussian means.
-        mean: Tensor containing Gaussian mean vectors.
-        diag_fct: Tensor containing diagonal Cholesky factors.
-        norm_logit: Optional tensor containing normalized component logits.
+        means: Tensor containing Gaussian mean vectors.
+        diag_factors: Tensor containing diagonal Cholesky factors.
+        norm_logits: Optional tensor containing normalized component logits.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_vector_batches(inpt, mean)
-    validate_diag_gaussian_parametrization(mean, diag_fct, norm_logit)
+    validate_vector_batches(inpt, means)
+    validate_diag_gaussian_parametrization(means, diag_factors, norm_logits)
 
 
 def validate_diag_gaussian_parametrizations(
-    mean_0: Tensor,
-    diag_fct_0: Tensor,
-    mean_1: Tensor,
-    diag_fct_1: Tensor,
+    means_0: Tensor,
+    diag_factors_0: Tensor,
+    means_1: Tensor,
+    diag_factors_1: Tensor,
 ) -> None:
     """
     Validates a pair of diagonally-constrained Gaussian parametrizations.
 
     Args:
-        mean_0: Mean vectors for the first Gaussian parametrization.
-        diag_fct_0: Diagonal factors for the first Gaussian parametrization.
-        mean_1: Mean vectors for the second Gaussian parametrization.
-        diag_fct_1: Diagonal factors for the second Gaussian parametrization.
+        means_0: Mean vectors for the first Gaussian parametrization.
+        diag_factors_0: Diagonal factors for the first Gaussian
+            parametrization.
+        means_1: Mean vectors for the second Gaussian parametrization.
+        diag_factors_1: Diagonal factors for the second Gaussian
+            parametrization.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_diag_gaussian_parametrization(mean_0, diag_fct_0)
-    validate_diag_gaussian_parametrization(mean_1, diag_fct_1)
+    validate_diag_gaussian_parametrization(means_0, diag_factors_0)
+    validate_diag_gaussian_parametrization(means_1, diag_factors_1)
 
-    *_, mean_0_last_dim = list(mean_0.shape)
-    *_, mean_1_last_dim = list(mean_1.shape)
+    *_, means_0_last_dim = list(means_0.shape)
+    *_, means_1_last_dim = list(means_1.shape)
 
-    if mean_0_last_dim != mean_1_last_dim:
+    if means_0_last_dim != means_1_last_dim:
         raise HaveIncompatibleDims(
-            "Last dim of first tensor (mean_0) and third tensor (mean_1) are "
-            "not compatible"
+            "Last dim of first tensor (means_0) and third tensor "
+            "(means_1) are not compatible"
         )
 
 
-def validate_iso_fct(iso_fct: Tensor) -> None:
+def validate_iso_factors(iso_factors: Tensor) -> None:
     """
     Validates an isometrically-restricted batch of Cholesky factors.
 
     Args:
-        iso_fct: Tensor expected to contain positive isometric scale factors.
+        iso_factors: Tensor expected to contain positive isometric scale
+            factors.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_scalar_batch(iso_fct)
+    validate_scalar_batch(iso_factors)
 
-    if (iso_fct <= 0).any():
+    if (iso_factors <= 0).any():
         raise HasNonPositiveElement(
-            "Argument tensor (iso_fct) has a non-positive element"
+            "Argument tensor (iso_factors) has a non-positive element"
         )
 
 
 def validate_iso_gaussian_parametrization(
-    mean: Tensor,
-    iso_fct: Tensor,
-    norm_logit: Optional[Tensor] = None
+    means: Tensor,
+    iso_factors: Tensor,
+    norm_logits: Optional[Tensor] = None
 ) -> None:
     """
     Validates an isometrically-constrained Gaussian parametrization.
 
     Args:
-        mean: Tensor containing Gaussian mean vectors.
-        iso_fct: Tensor containing isometric scale factors.
-        norm_logit: Optional tensor containing normalized component logits.
+        means: Tensor containing Gaussian mean vectors.
+        iso_factors: Tensor containing isometric scale factors.
+        norm_logits: Optional tensor containing normalized component logits.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_vector_batch(mean)
-    validate_iso_fct(iso_fct)
+    validate_vector_batch(means)
+    validate_iso_factors(iso_factors)
 
-    *mean_batch_shape, _ = list(mean.shape)
-    iso_fct_batch_shape = list(iso_fct.shape)
+    *means_batch_shape, _ = list(means.shape)
+    iso_factors_batch_shape = list(iso_factors.shape)
 
-    if not are_broadcastable(mean_batch_shape, iso_fct_batch_shape):
+    if not are_broadcastable(means_batch_shape, iso_factors_batch_shape):
         raise HaveNonBroadcastableShapes(
-            "Batch dims of first tensor (mean) and second tensor "
-            "(iso_fct) are not broadcastable"
+            "Batch dims of first tensor (means) and second tensor "
+            "(iso_factors) are not broadcastable"
         )
 
-    if norm_logit is not None:
-        validate_norm_logit(norm_logit)
+    if norm_logits is not None:
+        validate_norm_logits(norm_logits)
 
-        norm_logit_batch_shape = list(norm_logit.shape)
+        norm_logits_batch_shape = list(norm_logits.shape)
 
-        batch_shape = broadcast_shapes(mean_batch_shape, iso_fct_batch_shape)
+        batch_shape = torch.broadcast_shapes(
+            means_batch_shape, iso_factors_batch_shape
+        )
         batch_shape = list(batch_shape)
 
-        if batch_shape != norm_logit_batch_shape:
+        if batch_shape != norm_logits_batch_shape:
             raise HaveNonMatchingShapes(
-                "Broadcasting shape of first (mean) and second tensor "
-                "(iso_fct) does not match the shape of third tensor "
-                "(norm_logit)"
+                "Broadcasting shape of first (means) and second tensor "
+                "(iso_factors) does not match the shape of third tensor "
+                "(norm_logits)"
             )
 
 
 def validate_iso_gaussian_specification(
     inpt: Tensor,
-    mean: Tensor,
-    iso_fct: Tensor,
-    norm_logit: Optional[Tensor] = None
+    means: Tensor,
+    iso_factors: Tensor,
+    norm_logits: Optional[Tensor] = None
 ) -> None:
     """
     Validates an isometrically-constrained Gaussian parametrization and its
@@ -628,45 +627,47 @@ def validate_iso_gaussian_specification(
 
     Args:
         inpt: Input tensor expected to be compatible with the Gaussian means.
-        mean: Tensor containing Gaussian mean vectors.
-        iso_fct: Tensor containing isometric scale factors.
-        norm_logit: Optional tensor containing normalized component logits.
+        means: Tensor containing Gaussian mean vectors.
+        iso_factors: Tensor containing isometric scale factors.
+        norm_logits: Optional tensor containing normalized component logits.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_vector_batches(inpt, mean)
-    validate_iso_gaussian_parametrization(mean, iso_fct, norm_logit)
+    validate_vector_batches(inpt, means)
+    validate_iso_gaussian_parametrization(means, iso_factors, norm_logits)
 
 
 def validate_iso_gaussian_parametrizations(
-    mean_0: Tensor,
-    iso_fct_0: Tensor,
-    mean_1: Tensor,
-    iso_fct_1: Tensor,
+    means_0: Tensor,
+    iso_factors_0: Tensor,
+    means_1: Tensor,
+    iso_factors_1: Tensor,
 ) -> None:
     """
     Validates a pair of isometrically-constrained Gaussian parametrization.
 
     Args:
-        mean_0: Mean vectors for the first Gaussian parametrization.
-        iso_fct_0: Isometric factors for the first Gaussian parametrization.
-        mean_1: Mean vectors for the second Gaussian parametrization.
-        iso_fct_1: Isometric factors for the second Gaussian parametrization.
+        means_0: Mean vectors for the first Gaussian parametrization.
+        iso_factors_0: Isometric factors for the first Gaussian
+            parametrization.
+        means_1: Mean vectors for the second Gaussian parametrization.
+        iso_factors_1: Isometric factors for the second Gaussian
+            parametrization.
 
     Returns:
         None: This function returns only after successful validation.
     """
 
-    validate_iso_gaussian_parametrization(mean_0, iso_fct_0)
-    validate_iso_gaussian_parametrization(mean_1, iso_fct_1)
+    validate_iso_gaussian_parametrization(means_0, iso_factors_0)
+    validate_iso_gaussian_parametrization(means_1, iso_factors_1)
 
-    *_, mean_0_last_dim = list(mean_0.shape)
-    *_, mean_1_last_dim = list(mean_1.shape)
+    *_, means_0_last_dim = list(means_0.shape)
+    *_, means_1_last_dim = list(means_1.shape)
 
-    if mean_0_last_dim != mean_1_last_dim:
+    if means_0_last_dim != means_1_last_dim:
         raise HaveIncompatibleDims(
-            "Last dim of first tensor (mean_0) and third tensor (mean_1) are "
-            "not compatible"
+            "Last dim of first tensor (means_0) and third tensor "
+            "(means_1) are not compatible"
         )

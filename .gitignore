@@ -1,9 +1,12 @@
-/dist/
-/build/
-/*.egg-info/
+/.github/
+/.vscode/
 
 /.dev/
 /.test/
 /.pub/
+
+/dist/
+/build/
+/*.egg-info/
 
 /test.bash

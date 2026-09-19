@@ -2,17 +2,22 @@
 Utilities.
 """
 
+from typing import Optional
+
 from math import log
 
-from torch import Tensor, zeros, eye, device as Device, dtype as DType
+
+import torch
+
+from torch import Tensor
 from torch.nn.functional import softplus
 from torch.distributions.multivariate_normal import MultivariateNormal
 
 
 def sample_standard_multivariate_normal(
     *shape: int,
-    device: str | Device | None = None,
-    dtype: DType | None = None
+    device: Optional[torch.device] = None,
+    dtype: Optional[torch.dtype] = None
 ) -> Tensor:
     """
     Returns a batch of vectors sampled from a multivariate normal
@@ -45,8 +50,8 @@ def sample_standard_multivariate_normal(
             "Batch dimensions in argument (shape) must be non-negative"
         )
 
-    mean = zeros(dim, device=device, dtype=dtype)
-    cov = eye(dim, device=device, dtype=dtype)
+    mean = torch.zeros(dim, device=device, dtype=dtype)
+    cov = torch.eye(dim, device=device, dtype=dtype)
 
     dist = MultivariateNormal(mean, cov)
 

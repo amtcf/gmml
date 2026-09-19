@@ -6,61 +6,51 @@ on the 'functional' module are related to tested functions either by
 composition or through trivial operations.
 """
 
-from __future__ import annotations
+from typing import Self
 
 from unittest import TestCase
 
-from torch import tensor
 
-from gmml.functional import _get_vb_pairwise_diff
-from gmml.functional import _get_log_det
-from gmml.functional import _get_triu_mahalanobis_dist
-from gmml.functional import _get_tr_triu_triu
-from gmml.functional import _get_kl_div
-from gmml.functional import get_log_joint_prob
-from gmml.functional import get_sample
-from gmml.functional import get_diag_kl_div
-from gmml.functional import get_diag_log_joint_prob
-from gmml.functional import get_diag_sample
-from gmml.functional import get_iso_kl_div
-from gmml.functional import get_iso_log_joint_prob
-from gmml.functional import get_iso_sample
-
-from .util import log_softmax
+import torch
 
 
-class Test_GetVBPairwiseDiff(TestCase):
+import gmml.functional as gF
+
+from .utils import log_softmax
+
+
+class Test_GetVBPairwiseDiffs(TestCase):
     """
-    '_get_vb_pairwise_diff' unit testing
+    '_get_vb_pairwise_diffs' unit testing
     """
 
-    def setUp(self: Test_GetVBPairwiseDiff) -> None:
+    def setUp(self: Self) -> None:
         """
         """
 
-        self.inpt_0 = tensor(
+        self.inpt_0 = torch.tensor(
             [
                 [0.0, 0.0],
             ]
         )
-        self.inpt_1 = tensor(
+        self.inpt_1 = torch.tensor(
             [
                 [1.0, 0.0],
             ]
         )
-        self.inpt_2 = tensor(
+        self.inpt_2 = torch.tensor(
             [
                 [0.0, 1.0],
                 [1.0, 0.0],
             ]
         )
-        self.inpt_3 = tensor(
+        self.inpt_3 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        self.inpt_4 = tensor(
+        self.inpt_4 = torch.tensor(
             [
                 [
                     [0.0, 0.0],
@@ -77,11 +67,11 @@ class Test_GetVBPairwiseDiff(TestCase):
             ]
         )
 
-    def test_01(self: Test_GetVBPairwiseDiff) -> None:
+    def test_01(self: Self) -> None:
         """
         """
 
-        true_out_01 = tensor(
+        true_out_01 = torch.tensor(
             [
                 [
                     [- 1.0, 0.0],
@@ -89,16 +79,16 @@ class Test_GetVBPairwiseDiff(TestCase):
             ]
         )
 
-        out_01 = _get_vb_pairwise_diff(self.inpt_0, self.inpt_1)
+        out_01 = gF._get_vb_pairwise_diffs(self.inpt_0, self.inpt_1)
 
         if (out_01 != true_out_01).any():
             self.assertTrue(False)
 
-    def test_10(self: Test_GetVBPairwiseDiff) -> None:
+    def test_10(self: Self) -> None:
         """
         """
 
-        true_out_10 = tensor(
+        true_out_10 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -106,16 +96,16 @@ class Test_GetVBPairwiseDiff(TestCase):
             ]
         )
 
-        out_10 = _get_vb_pairwise_diff(self.inpt_1, self.inpt_0)
+        out_10 = gF._get_vb_pairwise_diffs(self.inpt_1, self.inpt_0)
 
         if (out_10 != true_out_10).any():
             self.assertTrue(False)
 
-    def test_02(self: Test_GetVBPairwiseDiff) -> None:
+    def test_02(self: Self) -> None:
         """
         """
 
-        true_out_02 = tensor(
+        true_out_02 = torch.tensor(
             [
                 [
                     [0.0, - 1.0],
@@ -124,16 +114,16 @@ class Test_GetVBPairwiseDiff(TestCase):
             ]
         )
 
-        out_02 = _get_vb_pairwise_diff(self.inpt_0, self.inpt_2)
+        out_02 = gF._get_vb_pairwise_diffs(self.inpt_0, self.inpt_2)
 
         if (out_02 != true_out_02).any():
             self.assertTrue(False)
 
-    def test_20(self: Test_GetVBPairwiseDiff) -> None:
+    def test_20(self: Self) -> None:
         """
         """
 
-        true_out_20 = tensor(
+        true_out_20 = torch.tensor(
             [
                 [
                     [0.0, 1.0],
@@ -144,16 +134,16 @@ class Test_GetVBPairwiseDiff(TestCase):
             ]
         )
 
-        out_20 = _get_vb_pairwise_diff(self.inpt_2, self.inpt_0)
+        out_20 = gF._get_vb_pairwise_diffs(self.inpt_2, self.inpt_0)
 
         if (out_20 != true_out_20).any():
             self.assertTrue(False)
 
-    def test_23(self: Test_GetVBPairwiseDiff) -> None:
+    def test_23(self: Self) -> None:
         """
         """
 
-        true_out_23 = tensor(
+        true_out_23 = torch.tensor(
             [
                 [
                     [0.0, 1.0],
@@ -166,16 +156,16 @@ class Test_GetVBPairwiseDiff(TestCase):
             ]
         )
 
-        out_23 = _get_vb_pairwise_diff(self.inpt_2, self.inpt_3)
+        out_23 = gF._get_vb_pairwise_diffs(self.inpt_2, self.inpt_3)
 
         if (out_23 != true_out_23).any():
             self.assertTrue(False)
 
-    def test_32(self: Test_GetVBPairwiseDiff) -> None:
+    def test_32(self: Self) -> None:
         """
         """
 
-        true_out_32 = tensor(
+        true_out_32 = torch.tensor(
             [
                 [
                     [0.0, - 1.0],
@@ -188,16 +178,16 @@ class Test_GetVBPairwiseDiff(TestCase):
             ]
         )
 
-        out_32 = _get_vb_pairwise_diff(self.inpt_3, self.inpt_2)
+        out_32 = gF._get_vb_pairwise_diffs(self.inpt_3, self.inpt_2)
 
         if (out_32 != true_out_32).any():
             self.assertTrue(False)
 
-    def test_34(self: Test_GetVBPairwiseDiff) -> None:
+    def test_34(self: Self) -> None:
         """
         """
 
-        true_out_34 = tensor(
+        true_out_34 = torch.tensor(
             [
                 [
 
@@ -232,16 +222,16 @@ class Test_GetVBPairwiseDiff(TestCase):
             ]
         )
 
-        out_34 = _get_vb_pairwise_diff(self.inpt_3, self.inpt_4)
+        out_34 = gF._get_vb_pairwise_diffs(self.inpt_3, self.inpt_4)
 
         if (out_34 != true_out_34).any():
             self.assertTrue(False)
 
-    def test_43(self: Test_GetVBPairwiseDiff) -> None:
+    def test_43(self: Self) -> None:
         """
         """
 
-        true_out_43 = tensor(
+        true_out_43 = torch.tensor(
             [
                 [
                     [
@@ -277,22 +267,22 @@ class Test_GetVBPairwiseDiff(TestCase):
 
         )
 
-        out_43 = _get_vb_pairwise_diff(self.inpt_4, self.inpt_3)
+        out_43 = gF._get_vb_pairwise_diffs(self.inpt_4, self.inpt_3)
 
         if (out_43 != true_out_43).any():
             self.assertTrue(False)
 
 
-class Test_GetLogDet(TestCase):
+class Test_GetLogDets(TestCase):
     """
-    '_get_log_det' unit testing
+    '_get_log_dets' unit testing
     """
 
-    def test_0(self: Test_GetLogDet) -> None:
+    def test_0(self: Self) -> None:
         """
         """
 
-        full_fct_0 = tensor(
+        full_factors_0 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -301,20 +291,20 @@ class Test_GetLogDet(TestCase):
             ]
         )
 
-        true_out_0 = tensor(
+        true_out_0 = torch.tensor(
             [0.0]
         )
 
-        out_0 = _get_log_det(full_fct_0)
+        out_0 = gF._get_log_dets(full_factors_0)
 
         if (out_0 != true_out_0).any():
             self.assertTrue(False)
 
-    def test_1(self: Test_GetLogDet) -> None:
+    def test_1(self: Self) -> None:
         """
         """
 
-        full_fct_1 = tensor(
+        full_factors_1 = torch.tensor(
             [
                 [
                     [1.0, 1.0],
@@ -323,20 +313,20 @@ class Test_GetLogDet(TestCase):
             ]
         )
 
-        true_out_1 = tensor(
+        true_out_1 = torch.tensor(
             [0.0]
         )
 
-        out_1 = _get_log_det(full_fct_1)
+        out_1 = gF._get_log_dets(full_factors_1)
 
         if (out_1 != true_out_1).any():
             self.assertTrue(False)
 
-    def test_2(self: Test_GetLogDet) -> None:
+    def test_2(self: Self) -> None:
         """
         """
 
-        full_fct_2 = tensor(
+        full_factors_2 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -349,20 +339,20 @@ class Test_GetLogDet(TestCase):
             ]
         )
 
-        true_out_2 = tensor(
+        true_out_2 = torch.tensor(
             [0.0, 0.0]
         )
 
-        out_2 = _get_log_det(full_fct_2)
+        out_2 = gF._get_log_dets(full_factors_2)
 
         if (out_2 != true_out_2).any():
             self.assertTrue(False)
 
-    def test_3(self: Test_GetLogDet) -> None:
+    def test_3(self: Self) -> None:
         """
         """
 
-        full_fct_3 = tensor(
+        full_factors_3 = torch.tensor(
             [
                 [
                     [
@@ -387,39 +377,39 @@ class Test_GetLogDet(TestCase):
             ]
         )
 
-        true_out_3 = tensor(
+        true_out_3 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
 
-        out_3 = _get_log_det(full_fct_3)
+        out_3 = gF._get_log_dets(full_factors_3)
 
         if (out_3 != true_out_3).any():
             self.assertTrue(False)
 
 
-class Test_GetTriuMahalanobisDist(TestCase):
+class Test_GetTriuMahalanobisDists(TestCase):
     """
-    '_get_triu_mahalanobis_dist' unit testing
+    '_get_triu_mahalanobis_dists' unit testing
     """
 
-    def setUp(self: Test_GetTriuMahalanobisDist) -> None:
+    def setUp(self: Self) -> None:
         """
         """
 
-        self.inpt_0 = tensor(
+        self.inpt_0 = torch.tensor(
             [
                 [0.0, 0.0],
             ]
         )
-        self.mean_0 = tensor(
+        self.means_0 = torch.tensor(
             [
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_0 = tensor(
+        self.full_factors_0 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -428,19 +418,19 @@ class Test_GetTriuMahalanobisDist(TestCase):
             ]
         )
 
-        self.inpt_1 = tensor(
+        self.inpt_1 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        self.mean_1 = tensor(
+        self.means_1 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_1 = tensor(
+        self.full_factors_1 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -453,120 +443,120 @@ class Test_GetTriuMahalanobisDist(TestCase):
             ]
         )
 
-    def test_000(self: Test_GetTriuMahalanobisDist) -> None:
+    def test_000(self: Self) -> None:
         """
         """
 
-        true_out_000 = tensor(
+        true_out_000 = torch.tensor(
             [
                 [0.0],
             ]
         )
 
-        out_000 = _get_triu_mahalanobis_dist(
+        out_000 = gF._get_triu_mahalanobis_dists(
             self.inpt_0,
-            self.mean_0,
-            self.full_fct_0,
+            self.means_0,
+            self.full_factors_0,
         )
 
         if (out_000 != true_out_000).any():
             self.assertTrue(False)
 
-    def test_100(self: Test_GetTriuMahalanobisDist) -> None:
+    def test_100(self: Self) -> None:
         """
         """
 
-        true_out_100 = tensor(
+        true_out_100 = torch.tensor(
             [
                 [0.0],
                 [0.0],
             ]
         )
 
-        out_100 = _get_triu_mahalanobis_dist(
+        out_100 = gF._get_triu_mahalanobis_dists(
             self.inpt_1,
-            self.mean_0,
-            self.full_fct_0,
+            self.means_0,
+            self.full_factors_0,
         )
 
         if (out_100 != true_out_100).any():
             self.assertTrue(False)
 
-    def test_010(self: Test_GetTriuMahalanobisDist) -> None:
+    def test_010(self: Self) -> None:
         """
         """
 
-        true_out_010 = tensor(
+        true_out_010 = torch.tensor(
             [
                 [0.0],
                 [0.0],
             ]
         )
 
-        out_010 = _get_triu_mahalanobis_dist(
+        out_010 = gF._get_triu_mahalanobis_dists(
             self.inpt_0,
-            self.mean_1,
-            self.full_fct_0,
+            self.means_1,
+            self.full_factors_0,
         )
 
         if (out_010 != true_out_010).any():
             self.assertTrue(False)
 
-    def test_110(self: Test_GetTriuMahalanobisDist) -> None:
+    def test_110(self: Self) -> None:
         """
         """
 
-        true_out_110 = tensor(
+        true_out_110 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
 
-        out_110 = _get_triu_mahalanobis_dist(
+        out_110 = gF._get_triu_mahalanobis_dists(
             self.inpt_1,
-            self.mean_1,
-            self.full_fct_0,
+            self.means_1,
+            self.full_factors_0,
         )
 
         if (out_110 != true_out_110).any():
             self.assertTrue(False)
 
-    def test_011(self: Test_GetTriuMahalanobisDist) -> None:
+    def test_011(self: Self) -> None:
         """
         """
 
-        true_out_011 = tensor(
+        true_out_011 = torch.tensor(
             [
                 [0.0],
                 [0.0],
             ]
         )
 
-        out_011 = _get_triu_mahalanobis_dist(
+        out_011 = gF._get_triu_mahalanobis_dists(
             self.inpt_0,
-            self.mean_1,
-            self.full_fct_1,
+            self.means_1,
+            self.full_factors_1,
         )
 
         if (out_011 != true_out_011).any():
             self.assertTrue(False)
 
-    def test_111(self: Test_GetTriuMahalanobisDist) -> None:
+    def test_111(self: Self) -> None:
         """
         """
 
-        true_out_111 = tensor(
+        true_out_111 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
 
-        out_111 = _get_triu_mahalanobis_dist(
+        out_111 = gF._get_triu_mahalanobis_dists(
             self.inpt_1,
-            self.mean_1,
-            self.full_fct_1,
+            self.means_1,
+            self.full_factors_1,
         )
 
         if (out_111 != true_out_111).any():
@@ -578,11 +568,11 @@ class Test_GetTrTriuTriu(TestCase):
     '_get_tr_triu_triu' unit testing
     """
 
-    def setUp(self: Test_GetTrTriuTriu) -> None:
+    def setUp(self: Self) -> None:
         """
         """
 
-        self.full_fct_0 = tensor(
+        self.full_factors_0 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -590,7 +580,7 @@ class Test_GetTrTriuTriu(TestCase):
                 ],
             ]
         )
-        self.full_fct_1 = tensor(
+        self.full_factors_1 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -603,85 +593,85 @@ class Test_GetTrTriuTriu(TestCase):
             ]
         )
 
-    def test_00(self: Test_GetTrTriuTriu) -> None:
+    def test_00(self: Self) -> None:
         """
         """
 
-        true_out_00 = tensor(
+        true_out_00 = torch.tensor(
             [
                 [2.0],
             ]
         )
 
-        out_00 = _get_tr_triu_triu(self.full_fct_0, self.full_fct_0)
+        out_00 = gF._get_tr_triu_triu(self.full_factors_0, self.full_factors_0)
 
         if (out_00 != true_out_00).any():
             self.assertTrue(False)
 
-    def test_10(self: Test_GetTrTriuTriu) -> None:
+    def test_10(self: Self) -> None:
         """
         """
 
-        true_out_10 = tensor(
+        true_out_10 = torch.tensor(
             [
                 [2.0],
                 [2.0],
             ]
         )
 
-        out_10 = _get_tr_triu_triu(self.full_fct_1, self.full_fct_0)
+        out_10 = gF._get_tr_triu_triu(self.full_factors_1, self.full_factors_0)
 
         if (out_10 != true_out_10).any():
             self.assertTrue(False)
 
-    def test_01(self: Test_GetTrTriuTriu) -> None:
+    def test_01(self: Self) -> None:
         """
         """
 
-        true_out_01 = tensor(
+        true_out_01 = torch.tensor(
             [
                 [2.0, 2.0],
             ]
         )
 
-        out_01 = _get_tr_triu_triu(self.full_fct_0, self.full_fct_1)
+        out_01 = gF._get_tr_triu_triu(self.full_factors_0, self.full_factors_1)
 
         if (out_01 != true_out_01).any():
             self.assertTrue(False)
 
-    def test_11(self: Test_GetTrTriuTriu) -> None:
+    def test_11(self: Self) -> None:
         """
         """
 
-        true_out_11 = tensor(
+        true_out_11 = torch.tensor(
             [
                 [2.0, 2.0],
                 [2.0, 2.0],
             ]
         )
 
-        out_11 = _get_tr_triu_triu(self.full_fct_1, self.full_fct_1)
+        out_11 = gF._get_tr_triu_triu(self.full_factors_1, self.full_factors_1)
 
         if (out_11 != true_out_11).any():
             self.assertTrue(False)
 
 
-class Test_GetKLDiv(TestCase):
+class Test_GetKLDivs(TestCase):
     """
-    '_get_kl_div' unit testing
+    '_get_kl_divs' unit testing
     """
 
-    def setUp(self: Test_GetKLDiv) -> None:
+    def setUp(self: Self) -> None:
         """
         """
 
-        self.mean_0 = tensor(
+        self.means_0 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_0 = tensor(
+        self.full_factors_0 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -693,12 +683,12 @@ class Test_GetKLDiv(TestCase):
                 ],
             ]
         )
-        self.mean_1 = tensor(
+        self.means_1 = torch.tensor(
             [
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_1 = tensor(
+        self.full_factors_1 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -708,34 +698,34 @@ class Test_GetKLDiv(TestCase):
         )
 
 
-    def test_01(self: Test_GetKLDiv) -> None:
+    def test_01(self: Self) -> None:
         """
         """
 
         true_out_01_shape = [2, 1]
 
-        out_01 = _get_kl_div(
-            self.mean_0,
-            self.full_fct_0,
-            self.mean_1,
-            self.full_fct_1
+        out_01 = gF._get_kl_divs(
+            self.means_0,
+            self.full_factors_0,
+            self.means_1,
+            self.full_factors_1
         )
         out_01_shape = list(out_01.shape)
 
         if out_01_shape != true_out_01_shape:
             self.assertTrue(False)
 
-    def test_10(self: Test_GetKLDiv) -> None:
+    def test_10(self: Self) -> None:
         """
         """
 
         true_out_10_shape = [1, 2]
 
-        out_10 = _get_kl_div(
-            self.mean_1,
-            self.full_fct_1,
-            self.mean_0,
-            self.full_fct_0
+        out_10 = gF._get_kl_divs(
+            self.means_1,
+            self.full_factors_1,
+            self.means_0,
+            self.full_factors_0
         )
         out_10_shape = list(out_10.shape)
 
@@ -743,22 +733,22 @@ class Test_GetKLDiv(TestCase):
             self.assertTrue(False)
 
 
-class TestGetLogJointProb(TestCase):
+class TestGetLogJointProbs(TestCase):
     """
-    'get_log_joint_prob' unit testing
+    'get_log_joint_probs' unit testing
     """
 
-    def setUp(self: TestGetLogJointProb) -> None:
+    def setUp(self: Self) -> None:
         """
         """
 
-        self.mean_0 = tensor(
+        self.means_0 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_0 = tensor(
+        self.full_factors_0 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -770,38 +760,38 @@ class TestGetLogJointProb(TestCase):
                 ]
             ]
         )
-        self.norm_logit_0 = tensor(
+        self.norm_logits_0 = torch.tensor(
             [0.0, 0.0]
         )
-        self.norm_logit_0 = log_softmax(self.norm_logit_0)
+        self.norm_logits_0 = log_softmax(self.norm_logits_0)
 
-    def test_00(self: TestGetLogJointProb) -> None:
+    def test_00(self: Self) -> None:
         """
         """
 
-        inpt_0 = tensor(
+        inpt_0 = torch.tensor(
             [
                 [0.0, 0.0],
             ]
         )
         true_out_00_shape = [1, 2]
 
-        out_00 = get_log_joint_prob(
+        out_00 = gF.get_log_joint_probs(
             inpt_0,
-            self.mean_0,
-            self.full_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.full_factors_0,
+            self.norm_logits_0
         )
         out_00_shape = list(out_00.shape)
 
         if out_00_shape != true_out_00_shape:
             self.assertTrue(False)
 
-    def test_10(self: TestGetLogJointProb) -> None:
+    def test_10(self: Self) -> None:
         """
         """
 
-        inpt_1 = tensor(
+        inpt_1 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
@@ -809,22 +799,22 @@ class TestGetLogJointProb(TestCase):
         )
         true_out_10_shape = [2, 2]
 
-        out_10 = get_log_joint_prob(
+        out_10 = gF.get_log_joint_probs(
             inpt_1,
-            self.mean_0,
-            self.full_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.full_factors_0,
+            self.norm_logits_0
         )
         out_10_shape = list(out_10.shape)
 
         if out_10_shape != true_out_10_shape:
             self.assertTrue(False)
 
-    def test_20(self: TestGetLogJointProb) -> None:
+    def test_20(self: Self) -> None:
         """
         """
 
-        inpt_2 = tensor(
+        inpt_2 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
@@ -833,11 +823,11 @@ class TestGetLogJointProb(TestCase):
         )
         true_out_20_shape = [3, 2]
 
-        out_20 = get_log_joint_prob(
+        out_20 = gF.get_log_joint_probs(
             inpt_2,
-            self.mean_0,
-            self.full_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.full_factors_0,
+            self.norm_logits_0
         )
         out_20_shape = list(out_20.shape)
 
@@ -845,21 +835,21 @@ class TestGetLogJointProb(TestCase):
             self.assertTrue(False)
 
 
-class TestGetSample(TestCase):
+class TestGetSamples(TestCase):
     """
-    'get_sample' unit testing
+    'get_samples' unit testing
     """
 
-    def setUp(self: TestGetSample) -> None:
+    def setUp(self: Self) -> None:
         """
         """
 
-        self.mean_0 = tensor(
+        self.means_0 = torch.tensor(
             [
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_0 = tensor(
+        self.full_factors_0 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -868,13 +858,13 @@ class TestGetSample(TestCase):
             ]
         )
 
-        self.mean_1 = tensor(
+        self.means_1 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_1 =  tensor(
+        self.full_factors_1 =  torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -887,30 +877,30 @@ class TestGetSample(TestCase):
             ]
         )
 
-    def test_00(self: TestGetSample) -> None:
+    def test_00(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_0: list[int] = []
 
-        out = get_sample(
-            self.mean_0,
-            self.full_fct_0
+        out = gF.get_samples(
+            self.means_0,
+            self.full_factors_0
         )
         *out_batch_shape, _, _ = list(out.shape)
 
         if out_batch_shape != true_out_batch_shape_0:
             self.assertTrue(False)
 
-    def test_10(self: TestGetSample) -> None:
+    def test_10(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_1 = [1]
 
-        out = get_sample(
-            self.mean_0,
-            self.full_fct_0,
+        out = gF.get_samples(
+            self.means_0,
+            self.full_factors_0,
             *true_out_batch_shape_1
         )
         *out_batch_shape, _, _ = list(out.shape)
@@ -918,15 +908,15 @@ class TestGetSample(TestCase):
         if out_batch_shape != true_out_batch_shape_1:
             self.assertTrue(False)
 
-    def test_20(self: TestGetSample) -> None:
+    def test_20(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_2 = [1, 1]
 
-        out = get_sample(
-            self.mean_0,
-            self.full_fct_0,
+        out = gF.get_samples(
+            self.means_0,
+            self.full_factors_0,
             *true_out_batch_shape_2,
         )
         *out_batch_shape, _, _ = list(out.shape)
@@ -934,30 +924,30 @@ class TestGetSample(TestCase):
         if out_batch_shape != true_out_batch_shape_2:
             self.assertTrue(False)
 
-    def test_01(self: TestGetSample) -> None:
+    def test_01(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_0: list[int] = []
 
-        out = get_sample(
-            self.mean_1,
-            self.full_fct_1
+        out = gF.get_samples(
+            self.means_1,
+            self.full_factors_1
         )
         *out_batch_shape, _, _ = list(out.shape)
 
         if out_batch_shape != true_out_batch_shape_0:
             self.assertTrue(False)
 
-    def test_11(self: TestGetSample) -> None:
+    def test_11(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_1 = [1]
 
-        out = get_sample(
-            self.mean_1,
-            self.full_fct_1,
+        out = gF.get_samples(
+            self.means_1,
+            self.full_factors_1,
             *true_out_batch_shape_1
         )
         *out_batch_shape, _, _ = list(out.shape)
@@ -965,15 +955,15 @@ class TestGetSample(TestCase):
         if out_batch_shape != true_out_batch_shape_1:
             self.assertTrue(False)
 
-    def test_21(self: TestGetSample) -> None:
+    def test_21(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_2 = [1, 1]
 
-        out = get_sample(
-            self.mean_1,
-            self.full_fct_1,
+        out = gF.get_samples(
+            self.means_1,
+            self.full_factors_1,
             *true_out_batch_shape_2
         )
         *out_batch_shape, _, _ = list(out.shape)
@@ -982,21 +972,21 @@ class TestGetSample(TestCase):
             self.assertTrue(False)
 
 
-class Test_GetDiagKLDiv(TestCase):
+class Test_GetDiagKLDivs(TestCase):
     """
     """
 
-    def setUp(self: Test_GetDiagKLDiv) -> None:
+    def setUp(self: Self) -> None:
         """
         """
 
-        self.mean_0 = tensor(
+        self.means_0 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_0 = tensor(
+        self.full_factors_0 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -1008,19 +998,19 @@ class Test_GetDiagKLDiv(TestCase):
                 ],
             ]
         )
-        self.diag_fct_0 = tensor(
+        self.diag_factors_0 = torch.tensor(
             [
                 [1.0, 1.0],
                 [1.0, 1.0],
             ]
         )
 
-        self.mean_1 = tensor(
+        self.means_1 = torch.tensor(
             [
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_1 = tensor(
+        self.full_factors_1 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -1028,65 +1018,65 @@ class Test_GetDiagKLDiv(TestCase):
                 ],
             ]
         )
-        self.diag_fct_1 = tensor(
+        self.diag_factors_1 = torch.tensor(
             [
                 [1.0, 1.0],
             ]
         )
 
-    def test_01(self: Test_GetDiagKLDiv) -> None:
+    def test_01(self: Self) -> None:
         """
         """
 
-        full_out_01 = _get_kl_div(
-            self.mean_0,
-            self.full_fct_0,
-            self.mean_1,
-            self.full_fct_1,
+        full_out_01 = gF._get_kl_divs(
+            self.means_0,
+            self.full_factors_0,
+            self.means_1,
+            self.full_factors_1,
         )
 
-        diag_out_01 = get_diag_kl_div(
-            self.mean_0,
-            self.diag_fct_0,
-            self.mean_1,
-            self.diag_fct_1,
+        diag_out_01 = gF.get_diag_kl_divs(
+            self.means_0,
+            self.diag_factors_0,
+            self.means_1,
+            self.diag_factors_1,
         )
 
         if (diag_out_01 != full_out_01).any():
             self.assertTrue(False)
 
-    def test_10(self: Test_GetDiagKLDiv) -> None:
+    def test_10(self: Self) -> None:
         """
         """
 
-        full_out_10 = _get_kl_div(
-            self.mean_1,
-            self.full_fct_1,
-            self.mean_0,
-            self.full_fct_0,
+        full_out_10 = gF._get_kl_divs(
+            self.means_1,
+            self.full_factors_1,
+            self.means_0,
+            self.full_factors_0,
         )
 
-        diag_out_10 = get_diag_kl_div(
-            self.mean_1,
-            self.diag_fct_1,
-            self.mean_0,
-            self.diag_fct_0,
+        diag_out_10 = gF.get_diag_kl_divs(
+            self.means_1,
+            self.diag_factors_1,
+            self.means_0,
+            self.diag_factors_0,
         )
 
         if (diag_out_10 != full_out_10).any():
             self.assertTrue(False)
 
-    def test_02(self: Test_GetDiagKLDiv) -> None:
+    def test_02(self: Self) -> None:
         """
         """
 
-        mean_2 = tensor(
+        means_2 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        full_fct_2 = tensor(
+        full_factors_2 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -1098,42 +1088,42 @@ class Test_GetDiagKLDiv(TestCase):
                 ],
             ]
         )
-        diag_fct_2 = tensor(
+        diag_factors_2 = torch.tensor(
             [
                 [1.0, 1.0],
                 [1.0, 1.0],
             ]
         )
 
-        full_out_02 = _get_kl_div(
-            self.mean_0,
-            self.full_fct_0,
-            mean_2,
-            full_fct_2,
+        full_out_02 = gF._get_kl_divs(
+            self.means_0,
+            self.full_factors_0,
+            means_2,
+            full_factors_2,
         )
 
-        diag_out_02 = get_diag_kl_div(
-            self.mean_0,
-            self.diag_fct_0,
-            mean_2,
-            diag_fct_2,
+        diag_out_02 = gF.get_diag_kl_divs(
+            self.means_0,
+            self.diag_factors_0,
+            means_2,
+            diag_factors_2,
         )
 
         if (diag_out_02 != full_out_02).any():
             self.assertTrue(False)
 
-    def test_03(self: Test_GetDiagKLDiv) -> None:
+    def test_03(self: Self) -> None:
         """
         """
 
-        mean_3 = tensor(
+        means_3 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        full_fct_3 = tensor(
+        full_factors_3 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -1149,7 +1139,7 @@ class Test_GetDiagKLDiv(TestCase):
                 ],
             ]
         )
-        diag_fct_3 = tensor(
+        diag_factors_3 = torch.tensor(
             [
                 [1.0, 1.0],
                 [1.0, 1.0],
@@ -1157,40 +1147,40 @@ class Test_GetDiagKLDiv(TestCase):
             ]
         )
 
-        full_out_03 = _get_kl_div(
-            self.mean_0,
-            self.full_fct_0,
-            mean_3,
-            full_fct_3,
+        full_out_03 = gF._get_kl_divs(
+            self.means_0,
+            self.full_factors_0,
+            means_3,
+            full_factors_3,
         )
 
-        diag_out_03 = get_diag_kl_div(
-            self.mean_0,
-            self.diag_fct_0,
-            mean_3,
-            diag_fct_3,
+        diag_out_03 = gF.get_diag_kl_divs(
+            self.means_0,
+            self.diag_factors_0,
+            means_3,
+            diag_factors_3,
         )
 
         if (diag_out_03 != full_out_03).any():
             self.assertTrue(False)
 
 
-class TestGetDiagLogJointProb(TestCase):
+class TestGetDiagLogJointProbs(TestCase):
     """
-    'get_diag_log_joint_prob' unit testing
+    'get_diag_log_joint_probs' unit testing
     """
 
-    def setUp(self: TestGetDiagLogJointProb) -> None:
+    def setUp(self: Self) -> None:
         """
         """
 
-        self.mean_0 = tensor(
+        self.means_0 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_0 = tensor(
+        self.full_factors_0 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -1202,77 +1192,77 @@ class TestGetDiagLogJointProb(TestCase):
                 ],
             ]
         )
-        self.diag_fct_0 = tensor(
+        self.diag_factors_0 = torch.tensor(
             [
                 [1.0, 1.0],
                 [1.0, 1.0],
             ]
         )
-        self.norm_logit_0 = tensor(
+        self.norm_logits_0 = torch.tensor(
             [0.0, 0.0]
         )
-        self.norm_logit_0 = log_softmax(self.norm_logit_0)
+        self.norm_logits_0 = log_softmax(self.norm_logits_0)
 
-    def test_00(self: TestGetDiagLogJointProb) -> None:
+    def test_00(self: Self) -> None:
         """
         """
 
-        inpt_0 = tensor(
+        inpt_0 = torch.tensor(
             [
                 [0.0, 0.0],
             ]
         )
 
-        full_out_00 = get_log_joint_prob(
+        full_out_00 = gF.get_log_joint_probs(
             inpt_0,
-            self.mean_0,
-            self.full_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.full_factors_0,
+            self.norm_logits_0
         )
 
-        diag_out_00 = get_diag_log_joint_prob(
+        diag_out_00 = gF.get_diag_log_joint_probs(
             inpt_0,
-            self.mean_0,
-            self.diag_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.diag_factors_0,
+            self.norm_logits_0
         )
 
         if (diag_out_00 != full_out_00).any():
             self.assertTrue(False)
 
-    def test_10(self: TestGetDiagLogJointProb) -> None:
+    def test_10(self: Self) -> None:
         """
         """
 
-        inpt_1 = tensor(
+        inpt_1 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
 
-        full_out_10 = get_log_joint_prob(
+        full_out_10 = gF.get_log_joint_probs(
             inpt_1,
-            self.mean_0,
-            self.full_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.full_factors_0,
+            self.norm_logits_0
         )
 
-        diag_out_10 = get_diag_log_joint_prob(
+        diag_out_10 = gF.get_diag_log_joint_probs(
             inpt_1,
-            self.mean_0,
-            self.diag_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.diag_factors_0,
+            self.norm_logits_0
         )
 
         if (diag_out_10 != full_out_10).any():
             self.assertTrue(False)
 
-    def test_20(self: TestGetDiagLogJointProb) -> None:
+    def test_20(self: Self) -> None:
         """
         """
 
-        inpt_2 = tensor(
+        inpt_2 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
@@ -1280,81 +1270,81 @@ class TestGetDiagLogJointProb(TestCase):
             ]
         )
 
-        full_out_20 = get_log_joint_prob(
+        full_out_20 = gF.get_log_joint_probs(
             inpt_2,
-            self.mean_0,
-            self.full_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.full_factors_0,
+            self.norm_logits_0
         )
 
-        diag_out_20 = get_diag_log_joint_prob(
+        diag_out_20 = gF.get_diag_log_joint_probs(
             inpt_2,
-            self.mean_0,
-            self.diag_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.diag_factors_0,
+            self.norm_logits_0
         )
 
         if (diag_out_20 != full_out_20).any():
             self.assertTrue(False)
 
 
-class TestGetDiagSample(TestCase):
+class TestGetDiagSamples(TestCase):
     """
-    'get_diag_sample' unit testing
+    'get_diag_samples' unit testing
     """
 
-    def setUp(self: TestGetDiagSample) -> None:
+    def setUp(self: Self) -> None:
         """
         """
 
-        self.mean_0 = tensor(
+        self.means_0 = torch.tensor(
             [
                 [0.0, 0.0],
             ]
         )
-        self.diag_fct_0 = tensor(
+        self.diag_factors_0 = torch.tensor(
             [
                 [1.0, 1.0],
             ]
         )
 
-        self.mean_1 = tensor(
+        self.means_1 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        self.diag_fct_1 =  tensor(
+        self.diag_factors_1 =  torch.tensor(
             [
                 [1.0, 1.0],
                 [1.0, 1.0],
             ]
         )
 
-    def test_00(self: TestGetDiagSample) -> None:
+    def test_00(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_0: list[int] = []
 
-        out = get_diag_sample(
-            self.mean_0,
-            self.diag_fct_0
+        out = gF.get_diag_samples(
+            self.means_0,
+            self.diag_factors_0
         )
         *out_batch_shape, _, _ = list(out.shape)
 
         if out_batch_shape != true_out_batch_shape_0:
             self.assertTrue(False)
 
-    def test_10(self: TestGetDiagSample) -> None:
+    def test_10(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_1 = [1]
 
-        out = get_diag_sample(
-            self.mean_0,
-            self.diag_fct_0,
+        out = gF.get_diag_samples(
+            self.means_0,
+            self.diag_factors_0,
             *true_out_batch_shape_1
         )
         *out_batch_shape, _, _ = list(out.shape)
@@ -1362,15 +1352,15 @@ class TestGetDiagSample(TestCase):
         if out_batch_shape != true_out_batch_shape_1:
             self.assertTrue(False)
 
-    def test_20(self: TestGetDiagSample) -> None:
+    def test_20(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_2 = [1, 1]
 
-        out = get_diag_sample(
-            self.mean_0,
-            self.diag_fct_0,
+        out = gF.get_diag_samples(
+            self.means_0,
+            self.diag_factors_0,
             *true_out_batch_shape_2
         )
         *out_batch_shape, _, _ = list(out.shape)
@@ -1378,30 +1368,30 @@ class TestGetDiagSample(TestCase):
         if out_batch_shape != true_out_batch_shape_2:
             self.assertTrue(False)
 
-    def test_01(self: TestGetDiagSample) -> None:
+    def test_01(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_0: list[int] = []
 
-        out = get_diag_sample(
-            self.mean_1,
-            self.diag_fct_1
+        out = gF.get_diag_samples(
+            self.means_1,
+            self.diag_factors_1
         )
         *out_batch_shape, _, _ = list(out.shape)
 
         if out_batch_shape != true_out_batch_shape_0:
             self.assertTrue(False)
 
-    def test_11(self: TestGetDiagSample) -> None:
+    def test_11(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_1 = [1]
 
-        out = get_diag_sample(
-            self.mean_1,
-            self.diag_fct_1,
+        out = gF.get_diag_samples(
+            self.means_1,
+            self.diag_factors_1,
             *true_out_batch_shape_1,
         )
         *out_batch_shape, _, _ = list(out.shape)
@@ -1409,15 +1399,15 @@ class TestGetDiagSample(TestCase):
         if out_batch_shape != true_out_batch_shape_1:
             self.assertTrue(False)
 
-    def test_21(self: TestGetDiagSample) -> None:
+    def test_21(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_2 = [1, 1]
 
-        out = get_diag_sample(
-            self.mean_1,
-            self.diag_fct_1,
+        out = gF.get_diag_samples(
+            self.means_1,
+            self.diag_factors_1,
             *true_out_batch_shape_2,
         )
         *out_batch_shape, _, _ = list(out.shape)
@@ -1426,21 +1416,21 @@ class TestGetDiagSample(TestCase):
             self.assertTrue(False)
 
 
-class Test_GetIsoKLDiv(TestCase):
+class Test_GetIsoKLDivs(TestCase):
     """
     """
 
-    def setUp(self: Test_GetIsoKLDiv) -> None:
+    def setUp(self: Self) -> None:
         """
         """
 
-        self.mean_0 = tensor(
+        self.means_0 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_0 = tensor(
+        self.full_factors_0 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -1452,16 +1442,16 @@ class Test_GetIsoKLDiv(TestCase):
                 ],
             ]
         )
-        self.iso_fct_0 = tensor(
+        self.iso_factors_0 = torch.tensor(
             [1.0, 1.0]
         )
 
-        self.mean_1 = tensor(
+        self.means_1 = torch.tensor(
             [
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_1 = tensor(
+        self.full_factors_1 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -1469,63 +1459,63 @@ class Test_GetIsoKLDiv(TestCase):
                 ],
             ]
         )
-        self.iso_fct_1 = tensor(
+        self.iso_factors_1 = torch.tensor(
             [1.0]
         )
 
-    def test_01(self: Test_GetIsoKLDiv) -> None:
+    def test_01(self: Self) -> None:
         """
         """
 
-        full_out_01 = _get_kl_div(
-            self.mean_0,
-            self.full_fct_0,
-            self.mean_1,
-            self.full_fct_1,
+        full_out_01 = gF._get_kl_divs(
+            self.means_0,
+            self.full_factors_0,
+            self.means_1,
+            self.full_factors_1,
         )
 
-        iso_out_01 = get_iso_kl_div(
-            self.mean_0,
-            self.iso_fct_0,
-            self.mean_1,
-            self.iso_fct_1,
+        iso_out_01 = gF.get_iso_kl_divs(
+            self.means_0,
+            self.iso_factors_0,
+            self.means_1,
+            self.iso_factors_1,
         )
 
         if (iso_out_01 != full_out_01).any():
             self.assertTrue(False)
 
-    def test_10(self: Test_GetIsoKLDiv) -> None:
+    def test_10(self: Self) -> None:
         """
         """
 
-        full_out_10 = _get_kl_div(
-            self.mean_1,
-            self.full_fct_1,
-            self.mean_0,
-            self.full_fct_0,
+        full_out_10 = gF._get_kl_divs(
+            self.means_1,
+            self.full_factors_1,
+            self.means_0,
+            self.full_factors_0,
         )
 
-        iso_out_10 = get_iso_kl_div(
-            self.mean_1,
-            self.iso_fct_1,
-            self.mean_0,
-            self.iso_fct_0,
+        iso_out_10 = gF.get_iso_kl_divs(
+            self.means_1,
+            self.iso_factors_1,
+            self.means_0,
+            self.iso_factors_0,
         )
 
         if (iso_out_10 != full_out_10).any():
             self.assertTrue(False)
 
-    def test_02(self: Test_GetIsoKLDiv) -> None:
+    def test_02(self: Self) -> None:
         """
         """
 
-        mean_2 = tensor(
+        means_2 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        full_fct_2 = tensor(
+        full_factors_2 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -1537,39 +1527,39 @@ class Test_GetIsoKLDiv(TestCase):
                 ],
             ]
         )
-        iso_fct_2 = tensor(
+        iso_factors_2 = torch.tensor(
             [1.0, 1.0]
         )
 
-        full_out_02 = _get_kl_div(
-            self.mean_0,
-            self.full_fct_0,
-            mean_2,
-            full_fct_2,
+        full_out_02 = gF._get_kl_divs(
+            self.means_0,
+            self.full_factors_0,
+            means_2,
+            full_factors_2,
         )
 
-        iso_out_02 = get_iso_kl_div(
-            self.mean_0,
-            self.iso_fct_0,
-            mean_2,
-            iso_fct_2,
+        iso_out_02 = gF.get_iso_kl_divs(
+            self.means_0,
+            self.iso_factors_0,
+            means_2,
+            iso_factors_2,
         )
 
         if (iso_out_02 != full_out_02).any():
             self.assertTrue(False)
 
-    def test_03(self: Test_GetIsoKLDiv) -> None:
+    def test_03(self: Self) -> None:
         """
         """
 
-        mean_3 = tensor(
+        means_3 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        full_fct_3 = tensor(
+        full_factors_3 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -1585,45 +1575,45 @@ class Test_GetIsoKLDiv(TestCase):
                 ],
             ]
         )
-        iso_fct_3 = tensor(
+        iso_factors_3 = torch.tensor(
             [1.0, 1.0, 1.0]
         )
 
-        full_out_03 = _get_kl_div(
-            self.mean_0,
-            self.full_fct_0,
-            mean_3,
-            full_fct_3,
+        full_out_03 = gF._get_kl_divs(
+            self.means_0,
+            self.full_factors_0,
+            means_3,
+            full_factors_3,
         )
 
-        iso_out_03 = get_iso_kl_div(
-            self.mean_0,
-            self.iso_fct_0,
-            mean_3,
-            iso_fct_3,
+        iso_out_03 = gF.get_iso_kl_divs(
+            self.means_0,
+            self.iso_factors_0,
+            means_3,
+            iso_factors_3,
         )
 
         if (iso_out_03 != full_out_03).any():
             self.assertTrue(False)
 
 
-class TestGetIsoLogJointProb(TestCase):
+class TestGetIsoLogJointProbs(TestCase):
     """
-    'get_iso_log_joint_prob' unit testing
+    'get_iso_log_joint_probs' unit testing
     """
 
-    def setUp(self: TestGetIsoLogJointProb) -> None:
+    def setUp(self: Self) -> None:
         """
         """
 
-        self.mean_0 = tensor(
+        self.means_0 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        self.full_fct_0 = tensor(
+        self.full_factors_0 = torch.tensor(
             [
                 [
                     [1.0, 0.0],
@@ -1639,74 +1629,74 @@ class TestGetIsoLogJointProb(TestCase):
                 ],
             ]
         )
-        self.iso_fct_0 = tensor(
+        self.iso_factors_0 = torch.tensor(
             [1.0, 1.0, 1.0]
         )
-        self.norm_logit_0 = tensor(
+        self.norm_logits_0 = torch.tensor(
             [0.0, 0.0, 0.0]
         )
-        self.norm_logit_0 = log_softmax(self.norm_logit_0)
+        self.norm_logits_0 = log_softmax(self.norm_logits_0)
 
-    def test_00(self: TestGetIsoLogJointProb) -> None:
+    def test_00(self: Self) -> None:
         """
         """
 
-        inpt_0 = tensor(
+        inpt_0 = torch.tensor(
             [
                 [0.0, 0.0],
             ]
         )
 
-        full_out_00 = get_log_joint_prob(
+        full_out_00 = gF.get_log_joint_probs(
             inpt_0,
-            self.mean_0,
-            self.full_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.full_factors_0,
+            self.norm_logits_0
         )
 
-        iso_out_00 = get_iso_log_joint_prob(
+        iso_out_00 = gF.get_iso_log_joint_probs(
             inpt_0,
-            self.mean_0,
-            self.iso_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.iso_factors_0,
+            self.norm_logits_0
         )
 
         if (iso_out_00 != full_out_00).any():
             self.assertTrue(False)
 
-    def test_10(self: TestGetIsoLogJointProb) -> None:
+    def test_10(self: Self) -> None:
         """
         """
 
-        inpt_1 = tensor(
+        inpt_1 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
 
-        full_out_10 = get_log_joint_prob(
+        full_out_10 = gF.get_log_joint_probs(
             inpt_1,
-            self.mean_0,
-            self.full_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.full_factors_0,
+            self.norm_logits_0
         )
 
-        iso_out_10 = get_iso_log_joint_prob(
+        iso_out_10 = gF.get_iso_log_joint_probs(
             inpt_1,
-            self.mean_0,
-            self.iso_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.iso_factors_0,
+            self.norm_logits_0
         )
 
         if (iso_out_10 != full_out_10).any():
             self.assertTrue(False)
 
-    def test_20(self: TestGetIsoLogJointProb) -> None:
+    def test_20(self: Self) -> None:
         """
         """
 
-        inpt_2 = tensor(
+        inpt_2 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
@@ -1714,76 +1704,76 @@ class TestGetIsoLogJointProb(TestCase):
             ]
         )
 
-        full_out_20 = get_log_joint_prob(
+        full_out_20 = gF.get_log_joint_probs(
             inpt_2,
-            self.mean_0,
-            self.full_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.full_factors_0,
+            self.norm_logits_0
         )
 
-        iso_out_20 = get_iso_log_joint_prob(
+        iso_out_20 = gF.get_iso_log_joint_probs(
             inpt_2,
-            self.mean_0,
-            self.iso_fct_0,
-            self.norm_logit_0
+            self.means_0,
+            self.iso_factors_0,
+            self.norm_logits_0
         )
 
         if (iso_out_20 != full_out_20).any():
             self.assertTrue(False)
 
 
-class TestGetIsoSample(TestCase):
+class TestGetIsoSamples(TestCase):
     """
-    'get_iso_sample' unit testing
+    'get_iso_samples' unit testing
     """
 
-    def setUp(self: TestGetIsoSample) -> None:
+    def setUp(self: Self) -> None:
         """
         """
 
-        self.mean_0 = tensor(
+        self.means_0 = torch.tensor(
             [
                 [0.0, 0.0],
             ]
         )
-        self.iso_fct_0 = tensor(
+        self.iso_factors_0 = torch.tensor(
             [1.0]
         )
 
-        self.mean_1 = tensor(
+        self.means_1 = torch.tensor(
             [
                 [0.0, 0.0],
                 [0.0, 0.0],
             ]
         )
-        self.iso_fct_1 =  tensor(
+        self.iso_factors_1 =  torch.tensor(
             [1.0, 1.0]
         )
 
-    def test_00(self: TestGetIsoSample) -> None:
+    def test_00(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_0: list[int] = []
 
-        out = get_iso_sample(
-            self.mean_0,
-            self.iso_fct_0
+        out = gF.get_iso_samples(
+            self.means_0,
+            self.iso_factors_0
         )
         *out_batch_shape, _, _ = list(out.shape)
 
         if out_batch_shape != true_out_batch_shape_0:
             self.assertTrue(False)
 
-    def test_10(self: TestGetIsoSample) -> None:
+    def test_10(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_1 = [1]
 
-        out = get_iso_sample(
-            self.mean_0,
-            self.iso_fct_0,
+        out = gF.get_iso_samples(
+            self.means_0,
+            self.iso_factors_0,
             *true_out_batch_shape_1,
         )
         *out_batch_shape, _, _ = list(out.shape)
@@ -1791,15 +1781,15 @@ class TestGetIsoSample(TestCase):
         if out_batch_shape != true_out_batch_shape_1:
             self.assertTrue(False)
 
-    def test_20(self: TestGetIsoSample) -> None:
+    def test_20(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_2 = [1, 1]
 
-        out = get_iso_sample(
-            self.mean_0,
-            self.iso_fct_0,
+        out = gF.get_iso_samples(
+            self.means_0,
+            self.iso_factors_0,
             *true_out_batch_shape_2
         )
         *out_batch_shape, _, _ = list(out.shape)
@@ -1807,30 +1797,30 @@ class TestGetIsoSample(TestCase):
         if out_batch_shape != true_out_batch_shape_2:
             self.assertTrue(False)
 
-    def test_01(self: TestGetIsoSample) -> None:
+    def test_01(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_0: list[int] = []
 
-        out = get_iso_sample(
-            self.mean_1,
-            self.iso_fct_1
+        out = gF.get_iso_samples(
+            self.means_1,
+            self.iso_factors_1
         )
         *out_batch_shape, _, _ = list(out.shape)
 
         if out_batch_shape != true_out_batch_shape_0:
             self.assertTrue(False)
 
-    def test_11(self: TestGetIsoSample) -> None:
+    def test_11(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_1 = [1]
 
-        out = get_iso_sample(
-            self.mean_1,
-            self.iso_fct_1,
+        out = gF.get_iso_samples(
+            self.means_1,
+            self.iso_factors_1,
             *true_out_batch_shape_1
         )
         *out_batch_shape, _, _ = list(out.shape)
@@ -1838,15 +1828,15 @@ class TestGetIsoSample(TestCase):
         if out_batch_shape != true_out_batch_shape_1:
             self.assertTrue(False)
 
-    def test_21(self: TestGetIsoSample) -> None:
+    def test_21(self: Self) -> None:
         """
         """
 
         true_out_batch_shape_2 = [1, 1]
 
-        out = get_iso_sample(
-            self.mean_1,
-            self.iso_fct_1,
+        out = gF.get_iso_samples(
+            self.means_1,
+            self.iso_factors_1,
             *true_out_batch_shape_2
         )
         *out_batch_shape, _, _ = list(out.shape)
