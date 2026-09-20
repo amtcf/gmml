@@ -1445,6 +1445,9 @@ class Test_GetIsoKLDivs(TestCase):
         self.iso_factors_0 = torch.tensor(
             [1.0, 1.0]
         )
+        self.shared_iso_factors_0 = torch.tensor(
+            [1.0]
+        )
 
         self.means_1 = torch.tensor(
             [
@@ -1460,6 +1463,64 @@ class Test_GetIsoKLDivs(TestCase):
             ]
         )
         self.iso_factors_1 = torch.tensor(
+            [1.0]
+        )
+        self.shared_iso_factors_1 = torch.tensor(
+            [1.0]
+        )
+
+        self.means_2 = torch.tensor(
+            [
+                [0.0, 0.0],
+                [0.0, 0.0],
+            ]
+        )
+        self.full_factors_2 = torch.tensor(
+            [
+                [
+                    [1.0, 0.0],
+                    [0.0, 1.0],
+                ],
+                [
+                    [1.0, 0.0],
+                    [0.0, 1.0],
+                ],
+            ]
+        )
+        self.iso_factors_2 = torch.tensor(
+            [1.0, 1.0]
+        )
+        self.shared_iso_factors_2 = torch.tensor(
+            [1.0]
+        )
+
+        self.means_3 = torch.tensor(
+            [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0],
+            ]
+        )
+        self.full_factors_3 = torch.tensor(
+            [
+                [
+                    [1.0, 0.0],
+                    [0.0, 1.0],
+                ],
+                [
+                    [1.0, 0.0],
+                    [0.0, 1.0],
+                ],
+                [
+                    [1.0, 0.0],
+                    [0.0, 1.0],
+                ],
+            ]
+        )
+        self.iso_factors_3 = torch.tensor(
+            [1.0, 1.0, 1.0]
+        )
+        self.shared_iso_factors_3 = torch.tensor(
             [1.0]
         )
 
@@ -1484,6 +1545,27 @@ class Test_GetIsoKLDivs(TestCase):
         if (iso_out_01 != full_out_01).any():
             self.assertTrue(False)
 
+    def test_01_shared(self: Self) -> None:
+        """
+        """
+
+        full_out_01 = gF._get_kl_divs(
+            self.means_0,
+            self.full_factors_0,
+            self.means_1,
+            self.full_factors_1,
+        )
+
+        shared_iso_out_01 = gF.get_iso_kl_divs(
+            self.means_0,
+            self.shared_iso_factors_0,
+            self.means_1,
+            self.shared_iso_factors_1,
+        )
+
+        if (shared_iso_out_01 != full_out_01).any():
+            self.assertTrue(False)
+
     def test_10(self: Self) -> None:
         """
         """
@@ -1505,95 +1587,109 @@ class Test_GetIsoKLDivs(TestCase):
         if (iso_out_10 != full_out_10).any():
             self.assertTrue(False)
 
+    def test_10_shared(self: Self) -> None:
+        """
+        """
+
+        full_out_10 = gF._get_kl_divs(
+            self.means_1,
+            self.full_factors_1,
+            self.means_0,
+            self.full_factors_0,
+        )
+
+        shared_iso_out_10 = gF.get_iso_kl_divs(
+            self.means_1,
+            self.shared_iso_factors_1,
+            self.means_0,
+            self.shared_iso_factors_0,
+        )
+
+        if (shared_iso_out_10 != full_out_10).any():
+            self.assertTrue(False)
+
     def test_02(self: Self) -> None:
         """
         """
 
-        means_2 = torch.tensor(
-            [
-                [0.0, 0.0],
-                [0.0, 0.0],
-            ]
-        )
-        full_factors_2 = torch.tensor(
-            [
-                [
-                    [1.0, 0.0],
-                    [0.0, 1.0],
-                ],
-                [
-                    [1.0, 0.0],
-                    [0.0, 1.0],
-                ],
-            ]
-        )
-        iso_factors_2 = torch.tensor(
-            [1.0, 1.0]
-        )
-
         full_out_02 = gF._get_kl_divs(
             self.means_0,
             self.full_factors_0,
-            means_2,
-            full_factors_2,
+            self.means_2,
+            self.full_factors_2,
         )
 
         iso_out_02 = gF.get_iso_kl_divs(
             self.means_0,
             self.iso_factors_0,
-            means_2,
-            iso_factors_2,
+            self.means_2,
+            self.iso_factors_2,
         )
 
         if (iso_out_02 != full_out_02).any():
+            self.assertTrue(False)
+
+    def test_02_shared(self: Self) -> None:
+        """
+        """
+
+        full_out_02 = gF._get_kl_divs(
+            self.means_0,
+            self.full_factors_0,
+            self.means_2,
+            self.full_factors_2,
+        )
+
+        shared_iso_out_02 = gF.get_iso_kl_divs(
+            self.means_0,
+            self.shared_iso_factors_0,
+            self.means_2,
+            self.shared_iso_factors_2,
+        )
+
+        if (shared_iso_out_02 != full_out_02).any():
             self.assertTrue(False)
 
     def test_03(self: Self) -> None:
         """
         """
 
-        means_3 = torch.tensor(
-            [
-                [0.0, 0.0],
-                [0.0, 0.0],
-                [0.0, 0.0],
-            ]
-        )
-        full_factors_3 = torch.tensor(
-            [
-                [
-                    [1.0, 0.0],
-                    [0.0, 1.0],
-                ],
-                [
-                    [1.0, 0.0],
-                    [0.0, 1.0],
-                ],
-                [
-                    [1.0, 0.0],
-                    [0.0, 1.0],
-                ],
-            ]
-        )
-        iso_factors_3 = torch.tensor(
-            [1.0, 1.0, 1.0]
-        )
-
         full_out_03 = gF._get_kl_divs(
             self.means_0,
             self.full_factors_0,
-            means_3,
-            full_factors_3,
+            self.means_3,
+            self.full_factors_3,
         )
 
         iso_out_03 = gF.get_iso_kl_divs(
             self.means_0,
             self.iso_factors_0,
-            means_3,
-            iso_factors_3,
+            self.means_3,
+            self.iso_factors_3,
         )
 
         if (iso_out_03 != full_out_03).any():
+            self.assertTrue(False)
+
+    def test_03_shared(self: Self) -> None:
+        """
+        """
+
+        full_out_03 = gF._get_kl_divs(
+            self.means_0,
+            self.full_factors_0,
+            self.means_3,
+            self.full_factors_3,
+        )
+
+        shared_iso_out_03 = gF.get_iso_kl_divs(
+            self.means_0,
+            self.shared_iso_factors_0,
+            self.means_3,
+            self.shared_iso_factors_3,
+        )
+
+        if (shared_iso_out_03 != full_out_03).any():
             self.assertTrue(False)
 
 
@@ -1632,6 +1728,9 @@ class TestGetIsoLogJointProbs(TestCase):
         self.iso_factors_0 = torch.tensor(
             [1.0, 1.0, 1.0]
         )
+        self.shared_iso_factors_0 = torch.tensor(
+            [1.0]
+        )
         self.norm_logits_0 = torch.tensor(
             [0.0, 0.0, 0.0]
         )
@@ -1664,6 +1763,33 @@ class TestGetIsoLogJointProbs(TestCase):
         if (iso_out_00 != full_out_00).any():
             self.assertTrue(False)
 
+    def test_00_shared(self: Self) -> None:
+        """
+        """
+
+        inpt_0 = torch.tensor(
+            [
+                [0.0, 0.0],
+            ]
+        )
+
+        full_out_00 = gF.get_log_joint_probs(
+            inpt_0,
+            self.means_0,
+            self.full_factors_0,
+            self.norm_logits_0
+        )
+
+        shared_iso_out_00 = gF.get_iso_log_joint_probs(
+            inpt_0,
+            self.means_0,
+            self.shared_iso_factors_0,
+            self.norm_logits_0
+        )
+
+        if (shared_iso_out_00 != full_out_00).any():
+            self.assertTrue(False)
+
     def test_10(self: Self) -> None:
         """
         """
@@ -1690,6 +1816,34 @@ class TestGetIsoLogJointProbs(TestCase):
         )
 
         if (iso_out_10 != full_out_10).any():
+            self.assertTrue(False)
+
+    def test_10_shared(self: Self) -> None:
+        """
+        """
+
+        inpt_1 = torch.tensor(
+            [
+                [0.0, 0.0],
+                [0.0, 0.0],
+            ]
+        )
+
+        full_out_10 = gF.get_log_joint_probs(
+            inpt_1,
+            self.means_0,
+            self.full_factors_0,
+            self.norm_logits_0
+        )
+
+        shared_iso_out_10 = gF.get_iso_log_joint_probs(
+            inpt_1,
+            self.means_0,
+            self.shared_iso_factors_0,
+            self.norm_logits_0
+        )
+
+        if (shared_iso_out_10 != full_out_10).any():
             self.assertTrue(False)
 
     def test_20(self: Self) -> None:
@@ -1721,6 +1875,35 @@ class TestGetIsoLogJointProbs(TestCase):
         if (iso_out_20 != full_out_20).any():
             self.assertTrue(False)
 
+    def test_20_shared(self: Self) -> None:
+        """
+        """
+
+        inpt_2 = torch.tensor(
+            [
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0],
+            ]
+        )
+
+        full_out_20 = gF.get_log_joint_probs(
+            inpt_2,
+            self.means_0,
+            self.full_factors_0,
+            self.norm_logits_0
+        )
+
+        shared_iso_out_20 = gF.get_iso_log_joint_probs(
+            inpt_2,
+            self.means_0,
+            self.shared_iso_factors_0,
+            self.norm_logits_0
+        )
+
+        if (shared_iso_out_20 != full_out_20).any():
+            self.assertTrue(False)
+
 
 class TestGetIsoSamples(TestCase):
     """
@@ -1739,6 +1922,9 @@ class TestGetIsoSamples(TestCase):
         self.iso_factors_0 = torch.tensor(
             [1.0]
         )
+        self.shared_iso_factors_0 = torch.tensor(
+            [1.0]
+        )
 
         self.means_1 = torch.tensor(
             [
@@ -1748,6 +1934,9 @@ class TestGetIsoSamples(TestCase):
         )
         self.iso_factors_1 =  torch.tensor(
             [1.0, 1.0]
+        )
+        self.shared_iso_factors_1 = torch.tensor(
+            [1.0]
         )
 
     def test_00(self: Self) -> None:
@@ -1765,6 +1954,21 @@ class TestGetIsoSamples(TestCase):
         if out_batch_shape != true_out_batch_shape_0:
             self.assertTrue(False)
 
+    def test_00_shared(self: Self) -> None:
+        """
+        """
+
+        true_out_batch_shape_0: list[int] = []
+
+        out = gF.get_iso_samples(
+            self.means_0,
+            self.shared_iso_factors_0
+        )
+        *out_batch_shape, _, _ = list(out.shape)
+
+        if out_batch_shape != true_out_batch_shape_0:
+            self.assertTrue(False)
+
     def test_10(self: Self) -> None:
         """
         """
@@ -1774,6 +1978,22 @@ class TestGetIsoSamples(TestCase):
         out = gF.get_iso_samples(
             self.means_0,
             self.iso_factors_0,
+            *true_out_batch_shape_1,
+        )
+        *out_batch_shape, _, _ = list(out.shape)
+
+        if out_batch_shape != true_out_batch_shape_1:
+            self.assertTrue(False)
+
+    def test_10_shared(self: Self) -> None:
+        """
+        """
+
+        true_out_batch_shape_1 = [1]
+
+        out = gF.get_iso_samples(
+            self.means_0,
+            self.shared_iso_factors_0,
             *true_out_batch_shape_1,
         )
         *out_batch_shape, _, _ = list(out.shape)
@@ -1797,6 +2017,22 @@ class TestGetIsoSamples(TestCase):
         if out_batch_shape != true_out_batch_shape_2:
             self.assertTrue(False)
 
+    def test_20_shared(self: Self) -> None:
+        """
+        """
+
+        true_out_batch_shape_2 = [1, 1]
+
+        out = gF.get_iso_samples(
+            self.means_0,
+            self.shared_iso_factors_0,
+            *true_out_batch_shape_2
+        )
+        *out_batch_shape, _, _ = list(out.shape)
+
+        if out_batch_shape != true_out_batch_shape_2:
+            self.assertTrue(False)
+
     def test_01(self: Self) -> None:
         """
         """
@@ -1806,6 +2042,21 @@ class TestGetIsoSamples(TestCase):
         out = gF.get_iso_samples(
             self.means_1,
             self.iso_factors_1
+        )
+        *out_batch_shape, _, _ = list(out.shape)
+
+        if out_batch_shape != true_out_batch_shape_0:
+            self.assertTrue(False)
+
+    def test_01_shared(self: Self) -> None:
+        """
+        """
+
+        true_out_batch_shape_0: list[int] = []
+
+        out = gF.get_iso_samples(
+            self.means_1,
+            self.shared_iso_factors_1
         )
         *out_batch_shape, _, _ = list(out.shape)
 
@@ -1828,6 +2079,22 @@ class TestGetIsoSamples(TestCase):
         if out_batch_shape != true_out_batch_shape_1:
             self.assertTrue(False)
 
+    def test_11_shared(self: Self) -> None:
+        """
+        """
+
+        true_out_batch_shape_1 = [1]
+
+        out = gF.get_iso_samples(
+            self.means_1,
+            self.shared_iso_factors_1,
+            *true_out_batch_shape_1
+        )
+        *out_batch_shape, _, _ = list(out.shape)
+
+        if out_batch_shape != true_out_batch_shape_1:
+            self.assertTrue(False)
+
     def test_21(self: Self) -> None:
         """
         """
@@ -1837,6 +2104,22 @@ class TestGetIsoSamples(TestCase):
         out = gF.get_iso_samples(
             self.means_1,
             self.iso_factors_1,
+            *true_out_batch_shape_2
+        )
+        *out_batch_shape, _, _ = list(out.shape)
+
+        if out_batch_shape != true_out_batch_shape_2:
+            self.assertTrue(False)
+
+    def test_21_shared(self: Self) -> None:
+        """
+        """
+
+        true_out_batch_shape_2 = [1, 1]
+
+        out = gF.get_iso_samples(
+            self.means_1,
+            self.shared_iso_factors_1,
             *true_out_batch_shape_2
         )
         *out_batch_shape, _, _ = list(out.shape)
