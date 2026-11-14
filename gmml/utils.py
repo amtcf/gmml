@@ -2,22 +2,17 @@
 Utilities.
 """
 
-from typing import Optional
-
 from math import log
 
-
 import torch
-
 from torch import Tensor
 from torch.nn.functional import softplus
-from torch.distributions.multivariate_normal import MultivariateNormal
 
 
 def sample_standard_multivariate_normal(
     *shape: int,
-    device: Optional[torch.device] = None,
-    dtype: Optional[torch.dtype] = None
+    device: torch.device | None = None,
+    dtype: torch.dtype | None = None,
 ) -> Tensor:
     """
     Returns a batch of vectors sampled from a multivariate normal
@@ -26,10 +21,8 @@ def sample_standard_multivariate_normal(
     Args:
         *shape: Output shape where the last dimension is the vector size and
             the leading dimensions form the sample batch shape.
-        device: Optional device on which to construct the distribution and
-            returned samples.
-        dtype: Optional dtype used to construct the distribution and returned
-            samples.
+        device: Optional device on which to allocate the returned samples.
+        dtype: Optional dtype used to allocate the returned samples.
 
     Returns:
         Tensor: Samples drawn from a standard multivariate normal
@@ -40,7 +33,7 @@ def sample_standard_multivariate_normal(
         raise ValueError("Argument (shape) is empty")
 
     dim = shape[-1]
-    shape = shape[: -1]
+    shape = shape[:-1]
 
     if dim <= 0:
         raise ValueError("Last entry of argument (shape) must be positive")
@@ -50,12 +43,7 @@ def sample_standard_multivariate_normal(
             "Batch dimensions in argument (shape) must be non-negative"
         )
 
-    mean = torch.zeros(dim, device=device, dtype=dtype)
-    cov = torch.eye(dim, device=device, dtype=dtype)
-
-    dist = MultivariateNormal(mean, cov)
-
-    return dist.sample(shape)
+    return torch.randn(*shape, dim, device=device, dtype=dtype)
 
 
 def set_softplus_diag(inpt: Tensor) -> Tensor:

@@ -3,12 +3,9 @@ Utilities testing module
 """
 
 from typing import Self
-
 from unittest import TestCase
 
-
 import torch
-
 
 import gmml.utils as utils
 
@@ -20,6 +17,8 @@ class TestSampleStandardMultivariateNormal(TestCase):
 
     def test_0(self: Self) -> None:
         """
+        Checks the output shape of 'sample_standard_multivariate_normal' on
+        case 0.
         """
 
         true_out_0_shape = [2]
@@ -31,6 +30,8 @@ class TestSampleStandardMultivariateNormal(TestCase):
 
     def test_1(self: Self) -> None:
         """
+        Checks the output shape of 'sample_standard_multivariate_normal' on
+        case 1.
         """
 
         true_out_1_shape = [2, 2]
@@ -42,58 +43,68 @@ class TestSampleStandardMultivariateNormal(TestCase):
 
     def test_2(self: Self) -> None:
         """
+        Checks that 'sample_standard_multivariate_normal' raises ValueError on
+        case 2.
         """
 
         try:
             utils.sample_standard_multivariate_normal()
         except ValueError:
             pass
-        except:
+        except Exception:
             self.assertTrue(False)
         else:
             self.assertTrue(False)
 
     def test_3(self: Self) -> None:
         """
+        Checks that 'sample_standard_multivariate_normal' raises ValueError on
+        case 3.
         """
 
         try:
             utils.sample_standard_multivariate_normal(0)
         except ValueError:
             pass
-        except:
+        except Exception:
             self.assertTrue(False)
         else:
             self.assertTrue(False)
 
     def test_4(self: Self) -> None:
         """
+        Checks that 'sample_standard_multivariate_normal' raises ValueError on
+        case 4.
         """
 
         try:
             utils.sample_standard_multivariate_normal(-1)
         except ValueError:
             pass
-        except:
+        except Exception:
             self.assertTrue(False)
         else:
             self.assertTrue(False)
 
     def test_5(self: Self) -> None:
         """
+        Checks that 'sample_standard_multivariate_normal' raises ValueError on
+        case 5.
         """
 
         try:
             utils.sample_standard_multivariate_normal(-1, 2)
         except ValueError:
             pass
-        except:
+        except Exception:
             self.assertTrue(False)
         else:
             self.assertTrue(False)
 
     def test_6(self: Self) -> None:
         """
+        Checks that 'sample_standard_multivariate_normal' honours the requested
+        device on case 6.
         """
 
         out_6 = utils.sample_standard_multivariate_normal(
@@ -105,6 +116,8 @@ class TestSampleStandardMultivariateNormal(TestCase):
 
     def test_7(self: Self) -> None:
         """
+        Checks that 'sample_standard_multivariate_normal' honours the requested
+        dtype on case 7.
         """
 
         out_7 = utils.sample_standard_multivariate_normal(
@@ -122,14 +135,14 @@ class TestSetSoftplusDiag(TestCase):
 
     def setUp(self: Self) -> None:
         """
+        Builds the shared test fixtures.
         """
 
-        self.mask = torch.tensor(
-            [0.0, 0.0]
-        )
+        self.mask = torch.tensor([0.0, 0.0])
 
     def test_0(self: Self) -> None:
         """
+        Checks the output of 'set_softplus_diag' on case 0.
         """
 
         inpt_0 = torch.tensor(
@@ -152,6 +165,7 @@ class TestSetSoftplusDiag(TestCase):
 
     def test_1(self: Self) -> None:
         """
+        Checks the output of 'set_softplus_diag' on case 1.
         """
 
         inpt_1 = torch.tensor(
@@ -174,12 +188,13 @@ class TestSetSoftplusDiag(TestCase):
 
     def test_2(self: Self) -> None:
         """
+        Checks the output of 'set_softplus_diag' on case 2.
         """
 
         inpt_2 = torch.tensor(
             [
-                [- 1.0,   0.0],
-                [  0.0, - 1.0],
+                [-1.0, 0.0],
+                [0.0, -1.0],
             ]
         )
 
@@ -196,23 +211,23 @@ class TestSetSoftplusDiag(TestCase):
 
     def test_3(self: Self) -> None:
         """
+        Checks that 'set_softplus_diag' raises ValueError on case 3.
         """
 
-        inpt_3 = torch.tensor(
-            [0.0, 0.0]
-        )
+        inpt_3 = torch.tensor([0.0, 0.0])
 
         try:
             utils.set_softplus_diag(inpt_3)
         except ValueError:
             pass
-        except:
+        except Exception:
             self.assertTrue(False)
         else:
             self.assertTrue(False)
 
     def test_4(self: Self) -> None:
         """
+        Checks that 'set_softplus_diag' raises ValueError on case 4.
         """
 
         inpt_4 = torch.tensor(0.0)
@@ -221,7 +236,7 @@ class TestSetSoftplusDiag(TestCase):
             utils.set_softplus_diag(inpt_4)
         except ValueError:
             pass
-        except:
+        except Exception:
             self.assertTrue(False)
         else:
             self.assertTrue(False)

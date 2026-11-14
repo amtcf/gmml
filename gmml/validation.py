@@ -2,70 +2,106 @@
 Validation helpers and custom errors.
 """
 
-from typing import Literal, Optional
-
-
 import torch
-
 from torch import Tensor
 from torch.testing import assert_close
-
 
 Shape = list[int] | tuple[int, ...]
 
 
 class HaveIncompatibleDims(ValueError):
     """Raised when tensor dimensions are incompatible."""
+
     pass
+
 
 class HaveNonMatchingShapes(ValueError):
     """Raised when broadcasted shapes do not match."""
+
     pass
+
 
 class HaveNonBroadcastableShapes(ValueError):
     """Raised when shapes cannot be broadcast together."""
+
     pass
 
 
 class HasNonPositiveElement(ValueError):
     """Raised when a tensor contains a non-positive element."""
+
     pass
+
 
 class HasNonPositiveDiagonalElement(ValueError):
     """Raised when a matrix diagonal contains a non-positive element."""
+
     pass
+
 
 class IsNotNormalized(ValueError):
     """Raised when a log-probability tensor is not normalized."""
+
     pass
+
 
 class IsNotUpperTriangular(ValueError):
     """Raised when a tensor is not upper triangular."""
+
     pass
 
 
 class IsEmpty(ValueError):
     """Raised when a tensor is empty."""
+
     pass
+
 
 class IsNotVector(ValueError):
     """Raised when a tensor is not one-dimensional."""
+
     pass
+
 
 class IsNotScalarBatch(ValueError):
     """Raised when a tensor is not a batch of scalars."""
+
     pass
+
 
 class IsNotVectorBatch(ValueError):
     """Raised when a tensor is not a batch of vectors."""
+
     pass
+
 
 class IsNotMatrixBatch(ValueError):
     """Raised when a tensor is not a batch of matrices."""
+
     pass
+
 
 class IsNotSquareMatrixBatch(ValueError):
     """Raised when a tensor is not a batch of square matrices."""
+
+    pass
+
+
+class HasUnexpectedShape(ValueError):
+    """Raised when a tensor does not have the expected shape."""
+
+    pass
+
+
+class IsEquiWeighted(ValueError):
+    """Raised when altering the logits of an equi-weighted codebook."""
+
+    pass
+
+
+class IsNotPositiveInteger(ValueError):
+    """Raised when a value is not a positive integer."""
+
     pass
 
 
@@ -87,6 +123,42 @@ def are_broadcastable(*shapes: Shape) -> bool:
         return False
 
 
+def is_broadcastable_to(shape: Shape, target_shape: Shape) -> bool:
+    """
+    Determines if a shape broadcasts to a target shape, leaving the target
+    shape unchanged.
+
+    Args:
+        shape: Shape to test.
+        target_shape: Shape the first argument should broadcast to.
+
+    Returns:
+        bool: True when shape broadcasts to target_shape, otherwise False.
+    """
+
+    if not are_broadcastable(shape, target_shape):
+        return False
+
+    return torch.broadcast_shapes(shape, target_shape) == torch.Size(
+        target_shape
+    )
+
+
+def validate_dim(dim: int) -> None:
+    """
+    Validates a dimensionality.
+
+    Args:
+        dim: Value expected to be a positive integer.
+
+    Returns:
+        None: This function returns only after successful validation.
+    """
+
+    if isinstance(dim, bool) or not isinstance(dim, int) or dim <= 0:
+        raise IsNotPositiveInteger("Argument (dim) is not a positive integer")
+
+
 def validate_non_empty(x: Tensor) -> None:
     """
     Validates a non-empty tensor.
@@ -100,6 +172,25 @@ def validate_non_empty(x: Tensor) -> None:
 
     if x.numel() == 0:
         raise IsEmpty("Argument tensor (x) is empty")
+
+
+def validate_shape(x: Tensor, shape: Shape) -> None:
+    """
+    Validates the shape of a tensor.
+
+    Args:
+        x: Tensor expected to have the given shape.
+        shape: Expected shape of the tensor.
+
+    Returns:
+        None: This function returns only after successful validation.
+    """
+
+    if x.shape != torch.Size(shape):
+        raise HasUnexpectedShape(
+            f"Argument tensor (x) has shape {tuple(x.shape)}, but shape "
+            f"{tuple(shape)} was expected"
+        )
 
 
 def validate_scalar_batch(x: Tensor) -> None:
@@ -198,11 +289,6 @@ def validate_square_matrix_batch(sq_mtrxs: Tensor) -> None:
 
     *_, sq_mtrxs_slast_dim, sq_mtrxs_last_dim = list(sq_mtrxs.shape)
 
-    if sq_mtrxs_last_dim < 2 or sq_mtrxs_slast_dim < 2:
-        raise IsNotMatrixBatch(
-            "Argument tensor (sq_mtrxs) is not a batch of matrices"
-        )
-
     if sq_mtrxs_slast_dim != sq_mtrxs_last_dim:
         raise IsNotSquareMatrixBatch(
             "Argument tensor (sq_mtrxs) is not a batch of square matrices"
@@ -210,8 +296,7 @@ def validate_square_matrix_batch(sq_mtrxs: Tensor) -> None:
 
 
 def validate_square_matrix_batches(
-    sq_mtrxs_0: Tensor,
-    sq_mtrxs_1: Tensor
+    sq_mtrxs_0: Tensor, sq_mtrxs_1: Tensor
 ) -> None:
     """
     Validates a pair of square matrices.
@@ -274,14 +359,15 @@ def validate_full_factors(full_factors: Tensor) -> None:
 
     if (full_factors.diagonal(dim1=-2, dim2=-1) <= 0).any():
         raise HasNonPositiveDiagonalElement(
-            "Argument tensor (full_factors) has a " \
+            "Argument tensor (full_factors) has a "
             "non-positive diagonal element"
         )
 
 
 def validate_norm_logits(norm_logits: Tensor) -> None:
     """
-    Validates a batch of normalized logit values.
+    Validates a batch of normalized logit values, each normalized over the
+    last dimension.
 
     Args:
         norm_logits: Tensor expected to encode normalized log-probabilities.
@@ -292,23 +378,58 @@ def validate_norm_logits(norm_logits: Tensor) -> None:
 
     validate_scalar_batch(norm_logits)
 
+    sums = norm_logits.exp().sum(-1)
+
     try:
-        assert_close(
-            norm_logits.exp().sum(),
-            torch.tensor(1.0),
-            check_dtype=False,
-            check_device=False
-        )
-    except AssertionError:
+        assert_close(sums, torch.ones_like(sums))
+    except AssertionError as err:
         raise IsNotNormalized(
             "Argument tensor (norm_logits) is not normalized"
+        ) from err
+
+
+def validate_joint_entropy_specification(
+    modal_entropies: Tensor, kl_divs: Tensor, norm_logits: Tensor
+) -> None:
+    """
+    Validates the modal entropies, pair-wise KL divergences and normalized
+    logits of a single Gaussian mixture.
+
+    Args:
+        modal_entropies: Tensor of component entropies, broadcastable to the
+            shape of norm_logits.
+        kl_divs: Tensor of pair-wise KL divergences, broadcastable to a
+            square matrix of the size of norm_logits.
+        norm_logits: Vector of normalized component logits.
+
+    Returns:
+        None: This function returns only after successful validation.
+    """
+
+    validate_vector(norm_logits)
+    validate_norm_logits(norm_logits)
+    validate_non_empty(modal_entropies)
+    validate_non_empty(kl_divs)
+
+    (num_components,) = list(norm_logits.shape)
+
+    if not is_broadcastable_to(modal_entropies.shape, [num_components]):
+        raise HaveNonBroadcastableShapes(
+            "First tensor (modal_entropies) is not broadcastable to the "
+            "shape of third tensor (norm_logits)"
+        )
+
+    if not is_broadcastable_to(
+        kl_divs.shape, [num_components, num_components]
+    ):
+        raise HaveNonBroadcastableShapes(
+            "Second tensor (kl_divs) is not broadcastable to a square "
+            "matrix of the size of third tensor (norm_logits)"
         )
 
 
 def validate_full_gaussian_parametrization(
-    means: Tensor,
-    full_factors: Tensor,
-    norm_logits: Optional[Tensor] = None
+    means: Tensor, full_factors: Tensor, norm_logits: Tensor | None = None
 ) -> None:
     """
     Validates a general Gaussian parametrization.
@@ -363,7 +484,7 @@ def validate_full_gaussian_specification(
     inpt: Tensor,
     means: Tensor,
     full_factors: Tensor,
-    norm_logits: Optional[Tensor] = None
+    norm_logits: Tensor | None = None,
 ) -> None:
     """
     Validates a general Gaussian parametrization and its relation with the
@@ -438,9 +559,7 @@ def validate_diag_factors(diag_factors: Tensor) -> None:
 
 
 def validate_diag_gaussian_parametrization(
-    means: Tensor,
-    diag_factors: Tensor,
-    norm_logits: Optional[Tensor] = None
+    means: Tensor, diag_factors: Tensor, norm_logits: Tensor | None = None
 ) -> None:
     """
     Validates a diagonally-constrained Gaussian parametrization.
@@ -494,7 +613,7 @@ def validate_diag_gaussian_specification(
     inpt: Tensor,
     means: Tensor,
     diag_factors: Tensor,
-    norm_logits: Optional[Tensor] = None
+    norm_logits: Tensor | None = None,
 ) -> None:
     """
     Validates a diagonally-constrained Gaussian parametrization and its
@@ -569,9 +688,7 @@ def validate_iso_factors(iso_factors: Tensor) -> None:
 
 
 def validate_iso_gaussian_parametrization(
-    means: Tensor,
-    iso_factors: Tensor,
-    norm_logits: Optional[Tensor] = None
+    means: Tensor, iso_factors: Tensor, norm_logits: Tensor | None = None
 ) -> None:
     """
     Validates an isometrically-constrained Gaussian parametrization.
@@ -619,7 +736,7 @@ def validate_iso_gaussian_specification(
     inpt: Tensor,
     means: Tensor,
     iso_factors: Tensor,
-    norm_logits: Optional[Tensor] = None
+    norm_logits: Tensor | None = None,
 ) -> None:
     """
     Validates an isometrically-constrained Gaussian parametrization and its

@@ -3,7 +3,10 @@
 
 /.dev/
 /.test/
+/.envs/
 /.pub/
+
+/.ruff_cache/
 
 /dist/
 /build/

@@ -2,19 +2,16 @@
 Codebook abstractions for Gaussian mixture models.
 """
 
-from typing import Any, Optional, Self
-
 import abc
-
+from typing import Any, Self
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from torch import Tensor
 
-
 import gmml.utils as utils
+import gmml.validation as val
 
 
 class CodeBook(nn.Module, abc.ABC):
@@ -23,48 +20,48 @@ class CodeBook(nn.Module, abc.ABC):
     Codevectors are represented by the 'means' parameter.
     """
 
-    def _init_means(
+    def _init__means(
         self: Self,
-        size: int,
+        num_components: int,
         dim: int,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ) -> nn.Parameter:
         """
         Initializes the means parameter according to a standard multivariate
         normal distribution.
 
         Args:
-            size: Number of codebook entries.
+            num_components: Number of codebook entries.
             dim: Dimensionality of each code vector.
             device: Optional device on which to allocate the parameter.
             dtype: Optional dtype used to allocate the parameter.
 
         Returns:
-            Parameter: The initialized means parameter.
+            nn.Parameter: The initialized means parameter.
         """
 
         return nn.Parameter(
             utils.sample_standard_multivariate_normal(
-                size, dim, device=device, dtype=dtype
+                num_components, dim, device=device, dtype=dtype
             ),
-            requires_grad=True
+            requires_grad=True,
         )
 
     def __init__(
         self: Self,
-        size: int,
+        num_components: int,
         dim: int,
         *args: Any,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
-        **kwargs: Any
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
+        **kwargs: Any,
     ) -> None:
         """
         Initializes the codebook means.
 
         Args:
-            size: Number of codebook entries.
+            num_components: Number of codebook entries.
             dim: Dimensionality of each code vector.
             *args: Positional arguments forwarded to the base module.
             device: Optional device on which to allocate parameters.
@@ -77,16 +74,44 @@ class CodeBook(nn.Module, abc.ABC):
 
         super().__init__(*args, **kwargs)
 
-        self.size = size
+        self.num_components = num_components
         self.dim = dim
 
-        self.means = self._init_means(
-            size, dim, device=device, dtype=dtype
+        self._means = self._init__means(
+            num_components, dim, device=device, dtype=dtype
         )
 
-    def reset_parameters(self: Self) -> None:
+    def get__means(self: Self) -> nn.Parameter:
         """
-        Reinitializes the means parameter in place.
+        Returns the means parameter.
+
+        Args:
+            None.
+
+        Returns:
+            nn.Parameter: The means of the codebook.
+        """
+
+        return self._means
+
+    def set__means(self: Self, _means: Tensor) -> None:
+        """
+        Sets the means parameter to a new value.
+
+        Args:
+            _means: Tensor containing the new means for the codebook.
+
+        Returns:
+            None: This method updates the means parameter in place.
+        """
+
+        val.validate_shape(_means, (self.num_components, self.dim))
+
+        self._means.data.copy_(_means)
+
+    def reset__means(self: Self) -> None:
+        """
+        Randomly reinitializes the means parameter in place.
 
         Args:
             None.
@@ -95,14 +120,41 @@ class CodeBook(nn.Module, abc.ABC):
             None: This method returns after reinitializing the parameter.
         """
 
-        self.means.data.copy_(
-            self._init_means(
-                self.size,
+        self._means.data.copy_(
+            self._init__means(
+                self.num_components,
                 self.dim,
-                device=self.means.device,
-                dtype=self.means.dtype
+                device=self._means.device,
+                dtype=self._means.dtype,
             )
         )
+
+    @property
+    def means(self: Self) -> Tensor:
+        """
+        Property to access the means parameter.
+
+        Args:
+            None.
+
+        Returns:
+            Tensor: The means of the codebook.
+        """
+
+        return self._means
+
+    def reset_parameters(self: Self) -> None:
+        """
+        Randomly resets all learnable parameters of the codebook.
+
+        Args:
+            None.
+
+        Returns:
+            None: This method updates the parameters in place.
+        """
+
+        self.reset__means()
 
     def extra_repr(self: Self) -> str:
         """
@@ -115,10 +167,10 @@ class CodeBook(nn.Module, abc.ABC):
             str: String describing the codebook's size and dimensionality.
         """
 
-        return f"size={self.size}, dim={self.dim}"
+        return f"num_components={self.num_components}, dim={self.dim}"
 
     @abc.abstractmethod
-    def forward(self: Self, inpt: torch.Tensor) -> torch.Tensor:
+    def forward(self: Self, inpt: Tensor) -> Tensor:
         """
         Abstract forward method.
 
@@ -135,48 +187,52 @@ class CodeBook(nn.Module, abc.ABC):
 class WeightedCodeBook(CodeBook, abc.ABC):
     """
     Codebook base class with learnable component weights.
+
+    When equi_weighted, the logits are fixed to zero and created with
+    requires_grad=False, and set__logits refuses to change them. Note that
+    module-wide calls such as requires_grad_(True) re-enable their gradient.
     """
 
-    def _init_logits(
+    def _init__logits(
         self: Self,
-        size: int,
+        num_components: int,
         equi_weighted: bool,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
     ) -> nn.Parameter:
         """
         Initializes the logits parameter, fixed to zero when equi_weighted.
 
         Args:
-            size: Number of codebook entries.
+            num_components: Number of codebook entries.
             equi_weighted: Whether to keep all mixture weights equal.
             device: Optional device on which to allocate the parameter.
             dtype: Optional dtype used to allocate the parameter.
 
         Returns:
-            Parameter: The initialized logits parameter.
+            nn.Parameter: The initialized logits parameter.
         """
 
         return nn.Parameter(
-            torch.zeros(size, device=device, dtype=dtype),
-            requires_grad=not equi_weighted
+            torch.zeros(num_components, device=device, dtype=dtype),
+            requires_grad=not equi_weighted,
         )
 
     def __init__(
         self: Self,
-        size: int,
+        num_components: int,
         dim: int,
         equi_weighted: bool = False,
         *args: Any,
-        device: Optional[torch.device] = None,
-        dtype: Optional[torch.dtype] = None,
-        **kwargs: Any
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
+        **kwargs: Any,
     ) -> None:
         """
         Initializes the codebook means and mixture logits.
 
         Args:
-            size: Number of codebook entries.
+            num_components: Number of codebook entries.
             dim: Dimensionality of each code vector.
             equi_weighted: Whether to keep all mixture weights equal.
             *args: Positional arguments forwarded to the base module.
@@ -189,13 +245,84 @@ class WeightedCodeBook(CodeBook, abc.ABC):
         """
 
         super().__init__(
-            size, dim, *args, device=device, dtype=dtype, **kwargs
+            num_components, dim, *args, device=device, dtype=dtype, **kwargs
         )
 
         self.equi_weighted = equi_weighted
-        self.logits = self._init_logits(
-            size, equi_weighted, device=device, dtype=dtype
+        self._logits = self._init__logits(
+            num_components, equi_weighted, device=device, dtype=dtype
         )
+
+    def get__logits(self: Self) -> nn.Parameter:
+        """
+        Returns the current logits parameter.
+
+        Args:
+            None.
+
+        Returns:
+            nn.Parameter: The current logits of the codebook.
+        """
+
+        return self._logits
+
+    def set__logits(self: Self, _logits: Tensor) -> None:
+        """
+        Sets the logits parameter to the provided tensor.
+
+        Args:
+            _logits: Tensor containing the new logits values.
+
+        Returns:
+            None: This method updates the logits parameter in place.
+
+        Raises:
+            IsEquiWeighted: If the codebook is equi-weighted, in which case
+                the logits are fixed to zero.
+        """
+
+        if self.equi_weighted:
+            raise val.IsEquiWeighted(
+                "Cannot set the logits of an equi-weighted codebook"
+            )
+
+        val.validate_shape(_logits, (self.num_components,))
+
+        self._logits.data.copy_(_logits)
+
+    def reset__logits(self: Self) -> None:
+        """
+        Resets the logits parameter to its initial state.
+
+        Args:
+            None.
+
+        Returns:
+            None: This method updates the logits parameter in place.
+        """
+
+        self._logits.data.copy_(
+            self._init__logits(
+                self.num_components,
+                self.equi_weighted,
+                device=self._logits.device,
+                dtype=self._logits.dtype,
+            )
+        )
+
+    @property
+    def logits(self: Self) -> Tensor:
+        """
+        Returns the current logits parameter as a property.
+
+        Args:
+            None.
+
+        Returns:
+            Tensor: The current logits of the codebook.
+        """
+
+        return self._logits
 
     def reset_parameters(self: Self) -> None:
         """
@@ -209,17 +336,10 @@ class WeightedCodeBook(CodeBook, abc.ABC):
         """
 
         super().reset_parameters()
-        self.logits.data.copy_(
-            self._init_logits(
-                self.size,
-                self.equi_weighted,
-                device=self.logits.device,
-                dtype=self.logits.dtype
-            )
-        )
+        self.reset__logits()
 
     @property
-    def norm_logits(self: Self) -> torch.Tensor:
+    def norm_logits(self: Self) -> Tensor:
         """
         Returns the normalized logit vector.
 
@@ -233,7 +353,7 @@ class WeightedCodeBook(CodeBook, abc.ABC):
         return F.log_softmax(self.logits, dim=-1)
 
     @property
-    def weights(self: Self) -> torch.Tensor:
+    def weights(self: Self) -> Tensor:
         """
         Returns the weights vector.
 
@@ -246,7 +366,7 @@ class WeightedCodeBook(CodeBook, abc.ABC):
 
         return F.softmax(self.logits, dim=-1)
 
-    def get_balance(self: Self) -> torch.Tensor:
+    def get_balance(self: Self) -> Tensor:
         """
         Returns the balance between the entries of the codebook.
         Higher values indicate more balanced components.
@@ -258,7 +378,9 @@ class WeightedCodeBook(CodeBook, abc.ABC):
             Tensor: Balance between the codebook entries.
         """
 
-        return - (self.norm_logits.exp() * self.norm_logits).sum(-1)
+        norm_logits = self.norm_logits
+
+        return -(norm_logits.exp() * norm_logits).sum(-1)
 
     def extra_repr(self: Self) -> str:
         """
@@ -320,7 +442,7 @@ class ProbCodeBook(CodeBook, abc.ABC):
 
         log_cond_probs = self.get_log_cond_probs(inpt)
 
-        return - (log_cond_probs.exp() * log_cond_probs).sum(-1)
+        return -(log_cond_probs.exp() * log_cond_probs).sum(-1)
 
     @abc.abstractmethod
     def get_log_cond_probs(self: Self, inpt: Tensor) -> Tensor:
@@ -338,10 +460,115 @@ class ProbCodeBook(CodeBook, abc.ABC):
         raise NotImplementedError()
 
 
-class GaussianCodeBook(ProbCodeBook, abc.ABC):
+class CholeskyGMMCodeBook(WeightedCodeBook, ProbCodeBook, abc.ABC):
     """
-    Codebook base class specialized for Gaussian components.
+    Codebook base class for Gaussian mixtures, parametrized by means,
+    mixture logits and Cholesky factors of the component precisions.
+
+    Concrete layers subclass this class only, and hold an unconstrained
+    Cholesky factors parameter, whose shape depends on the parametrization,
+    accessed through get__factors, set__factors, reset__factors and the
+    factors property. The constrained Cholesky factors are derived tensors
+    (e.g. full_factors).
+
+    Method resolution order: CholeskyGMMCodeBook, WeightedCodeBook,
+    ProbCodeBook, CodeBook. Constructors cooperate through
+    super().__init__(num_components, dim, *args, **kwargs), and
+    reset_parameters resets the means, the logits and the factors.
     """
+
+    @abc.abstractmethod
+    def get__factors(self: Self) -> nn.Parameter:
+        """
+        Abstract method for returning the unconstrained Cholesky factors
+        parameter of the Gaussian components.
+
+        Args:
+            None.
+
+        Returns:
+            nn.Parameter: Unconstrained Cholesky factors parameter.
+        """
+
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def set__factors(self: Self, _factors: Tensor) -> None:
+        """
+        Abstract method for setting the unconstrained Cholesky factors
+        parameter of the Gaussian components.
+
+        Args:
+            _factors: Tensor containing the new unconstrained Cholesky
+                factors.
+
+        Returns:
+            None: This method updates the parameter in place.
+        """
+
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def reset__factors(self: Self) -> None:
+        """
+        Abstract method for resetting the unconstrained Cholesky factors
+        parameter of the Gaussian components.
+
+        Args:
+            None.
+
+        Returns:
+            None: This method updates the parameter in place.
+        """
+
+        raise NotImplementedError()
+
+    @property
+    def factors(self: Self) -> Tensor:
+        """
+        Property to access the unconstrained Cholesky factors parameter.
+        Its shape depends on the parametrization of the concrete layer.
+
+        Args:
+            None.
+
+        Returns:
+            Tensor: Unconstrained Cholesky factors of the Gaussian components.
+            Not to be confused with the constrained Cholesky factors (e.g.
+            full_factors or diag_factors).
+        """
+
+        return self.get__factors()
+
+    def reset_parameters(self: Self) -> None:
+        """
+        Resets all learnable parameters of the Gaussian codebook, including
+        the Cholesky factors.
+
+        Args:
+            None.
+
+        Returns:
+            None: This method updates the parameters in place.
+        """
+
+        super().reset_parameters()
+        self.reset__factors()
+
+    def get_cond_probs(self: Self, inpt: Tensor) -> Tensor:
+        """
+        Returns the conditional categorical probability distributions,
+        normalizing the log joint probabilities once, since
+        softmax(log_softmax(z)) = softmax(z).
+
+        Args:
+            inpt: Input tensor passed to the Gaussian codebook.
+
+        Returns:
+            Tensor: Conditional categorical probability distributions.
+        """
+
+        return F.softmax(self.get_log_joint_probs(inpt), dim=-1)
 
     def get_log_cond_probs(self: Self, inpt: Tensor) -> Tensor:
         """
@@ -358,20 +585,6 @@ class GaussianCodeBook(ProbCodeBook, abc.ABC):
         return F.log_softmax(self.get_log_joint_probs(inpt), dim=-1)
 
     @property
-    def precisions(self: Self) -> Tensor:
-        """
-        Returns the precision matrices.
-
-        Args:
-            None.
-
-        Returns:
-            Tensor: Precision matrices of the Gaussian components.
-        """
-
-        return self.full_factors.mT @ self.full_factors
-
-    @property
     @abc.abstractmethod
     def full_factors(self: Self) -> Tensor:
         """
@@ -385,6 +598,20 @@ class GaussianCodeBook(ProbCodeBook, abc.ABC):
         """
 
         raise NotImplementedError()
+
+    @property
+    def precisions(self: Self) -> Tensor:
+        """
+        Returns the precision matrices.
+
+        Args:
+            None.
+
+        Returns:
+            Tensor: Precision matrices of the Gaussian components.
+        """
+
+        return self.full_factors.mT @ self.full_factors
 
     def get_log_likelihoods(self: Self, inpt: Tensor) -> Tensor:
         """
@@ -410,6 +637,21 @@ class GaussianCodeBook(ProbCodeBook, abc.ABC):
 
         Returns:
             Tensor: Log joint probability distributions.
+        """
+
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def sample(self: Self, *sample_batch_shape: int) -> Tensor:
+        """
+        Abstract method for sampling each Gaussian component.
+
+        Args:
+            *sample_batch_shape: Optional leading batch shape for the
+                generated samples.
+
+        Returns:
+            Tensor: Samples drawn from each mixture component.
         """
 
         raise NotImplementedError()

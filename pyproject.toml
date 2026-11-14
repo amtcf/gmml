@@ -7,7 +7,7 @@ packages = ["gmml"]
 
 [project]
 name = "gmml"
-description = "Pytorch implementation of a Gaussian mixture modeling layer"
+description = "PyTorch implementation of a Gaussian mixture modeling layer"
 
 authors = [
     {name = "algmarques"}
@@ -19,12 +19,53 @@ maintainers = [
 license = "MIT"
 license-files = ["LICENSE"]
 
-version = "2026.9dev1"
+version = "2026.11.dev0"
 
-requires-python = ">= 3.12.10"
+requires-python = ">= 3.12"
+# The torch lower bound is the oldest release with wheels for each Python.
 dependencies = [
-    "torch >= 2.8.0",
+    'torch >= 2.8.0; python_version < "3.14"',
+    'torch >= 2.9.0; python_version == "3.14"',
+    'torch >= 2.15.0; python_version >= "3.15"',
     "numpy >= 2.3.3"
 ]
 
 readme = "README.md"
+
+keywords = ["pytorch", "gaussian mixture model", "neural network layer"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+
+[project.urls]
+Homepage = "https://github.com/amtcf/gmml"
+Repository = "https://github.com/amtcf/gmml.git"
+Issues = "https://github.com/amtcf/gmml/issues"
+
+[tool.ruff]
+line-length = 79
+target-version = "py312"
+src = [".", "tests"]
+extend-exclude = [".test", ".pub", "dist", "build", "*.egg-info"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "NPY"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["gmml", "tests"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
