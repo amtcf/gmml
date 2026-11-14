@@ -84,10 +84,10 @@ To save memory and time, `DiagGMMLayer`, `IsoGMMLayer` and
 an input $x$ and a component mean $\mu$ by expanding it,
 
 $$
-\sum_{k = 1}^{d} \gamma_k ^ 2 (x_k - \mu_k) ^ 2
-= \sum_{k = 1}^{d} \gamma_k ^ 2 x_k ^ 2
-- 2 \sum_{k = 1}^{d} \gamma_k ^ 2 x_k \mu_k
-+ \sum_{k = 1}^{d} \gamma_k ^ 2 \mu_k ^ 2 ,
+\sum_{k = 1}^{d} \gamma_k ^ 2 (x_k - \mu_k) ^ 2 =
+\sum_{k = 1}^{d} \gamma_k ^ 2 x_k ^ 2 -
+2 \sum_{k = 1}^{d} \gamma_k ^ 2 x_k \mu_k +
+\sum_{k = 1}^{d} \gamma_k ^ 2 \mu_k ^ 2 ,
 $$
 
 where $\gamma$ is the diagonal (or isometric) Cholesky factor. The right-hand
